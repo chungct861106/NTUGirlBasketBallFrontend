@@ -58,7 +58,7 @@ const ACycle = (props) => {
   `;
 
   return (
-    <>
+    <React.Fragment>
       {cycleNum === 3 ? (
         <BodyDiv>
           <TopLabal>
@@ -89,7 +89,7 @@ const ACycle = (props) => {
           </BottomLabel>
         </BodyDiv>
       )}
-    </>
+    </React.Fragment>
   );
 };
 

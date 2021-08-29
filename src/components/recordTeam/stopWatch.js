@@ -56,7 +56,7 @@ const StopWatch = ({ arr, setArr }) => {
       </StopWatchSubDiv>
     </TeamStopWatch>
   ) : (
-    <></>
+    <React.Fragment></React.Fragment>
   );
 };
 

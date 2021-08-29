@@ -113,7 +113,7 @@ const RecordTime = ({ session, setSession, aMatch }) => {
   }, []);
 
   return (
-    <>
+    <React.Fragment>
       <TimeTitle>第{session}節/大錶</TimeTitle>
       <TimeClock> {TimeFormat(time)} </TimeClock>
       <TimeButton>
@@ -130,7 +130,7 @@ const RecordTime = ({ session, setSession, aMatch }) => {
           <StyledButton onClick={nextSession}>下一節</StyledButton>
         )}
       </TimeButton>
-    </>
+    </React.Fragment>
   );
 };
 

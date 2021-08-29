@@ -94,7 +94,7 @@ const TeamScore = ({ aMatch, teamType, session, homeBall, setHomeBall }) => {
   } = UseTeamScore({ aMatch, teamType, session });
 
   return (
-    <>
+    <React.Fragment>
       {teamInfo !== {} && (
         <TeamScoreDiv>
           <ScoreDiv>
@@ -149,7 +149,7 @@ const TeamScore = ({ aMatch, teamType, session, homeBall, setHomeBall }) => {
           <StopWatch arr={stopWatch} setArr={setStopWatch} />
         </TeamScoreDiv>
       )}
-    </>
+    </React.Fragment>
   );
 };
 

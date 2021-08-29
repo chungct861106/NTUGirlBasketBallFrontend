@@ -78,7 +78,7 @@ export default function News() {
   console.log("return result: ", images, news);
 
   return (
-    <>
+    <React.Fragment>
       <div className="ant-layout-content" style={{ height: "1000px" }}>
         <LayoutContent className="site-layout-content">
           {id === "administer" && (
@@ -125,6 +125,6 @@ export default function News() {
           />
         </LayoutContent>
       </div>
-    </>
+    </React.Fragment>
   );
 }
