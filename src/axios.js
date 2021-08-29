@@ -8,7 +8,7 @@ import { GetMatchObject } from "./axios/Match";
 import { GetPostObject } from "./axios/Post";
 import { GetRecordObject } from "./axios/Record";
 
-const serverURL = "http://localhost:4000/";
+const serverURL = "https://girlbasketball.herokuapp.com/";
 const testUsers = {
   adiminister: [
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJhY2NvdW50IjoidGhvbXNvbjg2MTEwNiIsInVzZXJuYW1lIjoidGhvbXNvbiIsImVtYWlsIjoidGhvbXNvbjg2MTEwNkBnbWFpbC5jb20iLCJhY3RpdmUiOjEsImFkaW0iOiJhZG1pbmlzdGVyIiwiaWF0IjoxNjIxNjU3MTE4LCJleHAiOjE2Mzk2NTcxMTh9.rx55CJNzevSUFJUP1EFjukPTgs47s2E42Ex-XHe_FdU",
