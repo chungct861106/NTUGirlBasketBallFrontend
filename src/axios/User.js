@@ -1,40 +1,17 @@
 import axios from "axios";
-
-export const GetUserObject = (serverURL, token) => {
+import { token } from "../axios";
+export const GetUserObject = (serverURL) => {
   return {
-    Create: async (
-      account,
-      username,
-      password,
-      passwordConfirm,
-      adim,
-      email,
-      department
-    ) => {
-      // [Must] account              使用者帳號
-      // [Must] password             使用者密碼
-      // [Must] passwordConfirm      使用者密碼確認
-      // [Must] adim                 使用者類別 [administer, recorder, team]
-      // [Must] email                使用者信箱
-      // [Must] department           使用者校系
-
+    Create: async (userObj) => {
       try {
         let response = await axios({
           method: "POST",
           url: serverURL + "users/create",
-          data: {
-            account,
-            username,
-            password,
-            passwordConfirm,
-            adim,
-            email,
-            department,
-          },
+          data: userObj,
         });
         return response.data;
       } catch (err) {
-        return `[Error][User][Create]` + err;
+        return err.response.data;
       }
     },
 
@@ -52,17 +29,6 @@ export const GetUserObject = (serverURL, token) => {
         return response.data;
       } catch (err) {
         return `[Error][User][Active]` + err;
-      }
-    },
-    GetRegisterData: async () => {
-      try {
-        let response = await axios({
-          method: "GET",
-          url: serverURL + "users/register",
-        });
-        return response.data;
-      } catch (err) {
-        return `[Error][User][GetRegisterData]` + err;
       }
     },
     AccountDelete: async (id) => {
@@ -85,17 +51,17 @@ export const GetUserObject = (serverURL, token) => {
     GetAccountByID: async (id) => {
       // [Must] id       User ID
       // [Must] token    使用者登入憑證 excpet for {adim: public}
-
+      console.log(token);
       try {
         let response = await axios({
           method: "GET",
           url: serverURL + "users/data",
-          params: { id: id },
+          params: { id },
           headers: { Authorization: token },
         });
-        return response.data[0];
+        return response.data;
       } catch (err) {
-        return `[Error][User][GetUserByID]` + err;
+        return err.response.data;
       }
     },
 
@@ -122,16 +88,14 @@ export const GetUserObject = (serverURL, token) => {
           method: "PUT",
           url: serverURL + "users/remind",
           data: { email },
-          headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        // return `[Error][User][SendRemindInfo]` + err;
-        throw err;
+        return err.response.data;
       }
     },
 
-    Update: async (account, username, email, department) => {
+    Update: async (updateObj) => {
       // [Must] account
       // [Must] username
       // [Must] email
@@ -141,12 +105,12 @@ export const GetUserObject = (serverURL, token) => {
         let response = await axios({
           method: "POST",
           url: serverURL + "users/update",
-          data: { account, username, email, department },
+          data: updateObj,
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][User][Update]` + err;
+        return err.response.data;
       }
     },
   };

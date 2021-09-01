@@ -15,7 +15,7 @@ const {
   InChargeGame,
   Checkteam,
   SchedulerRead,
-  UserEditor,
+  Contact,
 } = pagesMenu();
 
 // 找到相對應頁面，改後面的component
@@ -25,7 +25,7 @@ const zhPage = {
   scheduleRead: ["賽程時間表", SchedulerRead],
   gameResult: ["比賽結果", Default],
   adminInfo: ["主辦介紹", Default],
-  contact: ["聯絡資訊", UserEditor],
+  contact: ["聯絡資訊", Contact],
   main: ["首頁", News],
   teamInfo: ["球隊資訊", Try],
   preGame: ["安排預賽賽程", PreGamePage],
@@ -65,7 +65,7 @@ export function usePages() {
 const userForm = {
   account: null,
   active: null,
-  adim: "public",
+  admin: "public",
   email: null,
   token: null,
   user_id: null,
@@ -74,7 +74,7 @@ const userForm = {
 
 export function PagesProvider({ children }) {
   const [userInfo, setUserInfo] = useState(userForm);
-  const [id, setId] = useState(userForm.adim);
+  const [id, setId] = useState(userForm.admin);
   const [pageList, setPageList] = useState(idPage[id]);
   const [zhPageList, setZhPageList] = useState(
     pageList.map((page) => zhPage[page])
@@ -88,23 +88,21 @@ export function PagesProvider({ children }) {
 
   useEffect(() => {
     async function getData() {
-      const storageUserInfo = localStorage.getItem("userInfo");
-      try {
-        const getUserInfo = await CheckToken(storageUserInfo);
-        if (
-          (JSON.stringify(getUserInfo) === "{}") |
-          (typeof getUserInfo === "undefined")
-        ) {
-          setUserInfo(() => userForm);
-        } else {
-          setUserInfo(() => getUserInfo);
-        }
-      } catch (err) {
-        setUserInfo(() => userForm);
-        localStorage.removeItem("userInfo");
+      const token = localStorage.getItem("userInfo");
+      if (!token) return;
+      const response = await CheckToken(token);
+      if (response.code === 200) {
+        setUserInfo(response.data);
+        const updatePageList = idPage[response.data.admin];
+        setId(response.data.admin);
+        setPageList(updatePageList);
+        setZhPageList(updatePageList.map((page) => zhPage[page]));
+        setCurPage(zhPage[updatePageList[0]]);
+        return;
       }
+      setUserInfo(userForm);
+      localStorage.removeItem("userInfo");
     }
-
     getData();
   }, []);
 
@@ -113,7 +111,7 @@ export function PagesProvider({ children }) {
   }, [userInfo]);
 
   useEffect(() => {
-    const updateId = userInfo["adim"];
+    const updateId = userInfo["admin"];
     const updatePageList = idPage[updateId];
     setId(updateId);
     setPageList(updatePageList);

@@ -1,6 +1,6 @@
 import axios from "axios";
-
-export const GetRecorderObject = (serverURL, token) => {
+import { token } from "../axios";
+export const GetRecorderObject = (serverURL) => {
   return {
     Create: async (name, department) => {
       // return status success | fail_<reason>

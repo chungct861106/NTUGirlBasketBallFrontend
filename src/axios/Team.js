@@ -1,14 +1,8 @@
 import axios from "axios";
-
-export const GetTeamObject = (serverURL, token) => {
+import { token } from "../axios";
+export const GetTeamObject = (serverURL) => {
   return {
     Create: async (name, department) => {
-      // return status success | fail_<reason>
-
-      // [Must] name         隊伍名稱
-      // [Must] department   隊伍校系
-      // [Must] token        {administer: team}
-
       try {
         let response = await axios({
           method: "POST",
@@ -18,7 +12,7 @@ export const GetTeamObject = (serverURL, token) => {
         });
         return response.data;
       } catch (err) {
-        return `[Error][Team][Create]` + err;
+        return err.response.data;
       }
     },
 
@@ -41,19 +35,16 @@ export const GetTeamObject = (serverURL, token) => {
     },
 
     Delete: async (id) => {
-      // [Must] id       User ID
-      // [Myst] token    {adim:adimister}
-
       try {
         let response = await axios({
-          method: "POST",
-          url: serverURL + "teams/status",
-          data: { id },
+          method: "DELETE",
+          url: serverURL + "teams/delete",
+          data: { team_id: id },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Team][Delete]` + err;
+        return err.response.data;
       }
     },
 
@@ -65,12 +56,12 @@ export const GetTeamObject = (serverURL, token) => {
         let response = await axios({
           method: "GET",
           url: serverURL + "teams/data",
-          query: { id },
+          query: { user_id: id },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Team][GetInfoByID]` + err;
+        return err.response.data;
       }
     },
 
@@ -93,13 +84,13 @@ export const GetTeamObject = (serverURL, token) => {
       try {
         let response = await axios({
           method: "GET",
-          url: serverURL + "teams/GetTeamIDbyUser",
+          url: serverURL + "teams/data",
           headers: { Authorization: token },
           query: { user_id },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Team][GetTeamIDbyUser]` + err;
+        return err.response.data;
       }
     },
     GetInterGame: async () => {
@@ -116,21 +107,17 @@ export const GetTeamObject = (serverURL, token) => {
       }
     },
 
-    Update: async (name, department) => {
-      // [Must] id       Team name
-      // [Must] name     Team department
-      // [Must] token    {adim:team}
-
+    Update: async (team_id, name, department) => {
       try {
         let response = await axios({
           method: "POST",
           url: serverURL + "teams/update",
-          data: { name, department },
+          data: { team_id, name, department },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Team][Update]` + err;
+        return err.response.data;
       }
     },
     UpdatePaid: async (team_id, status) => {

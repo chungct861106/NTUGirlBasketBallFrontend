@@ -1,6 +1,6 @@
 import axios from "axios";
-
-export const GetRecordObject = (serverURL, token) => {
+import { token } from "../axios";
+export const GetRecordObject = (serverURL) => {
   return {
     CreateTeamRecord: async (match_id, team_id) => {
       try {

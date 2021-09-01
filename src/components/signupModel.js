@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Form, Input, Select, Modal } from "antd";
-import { doSignup, User } from "../axios";
+import { User } from "../axios";
 import Department from "../department.json";
 
 const { Option } = Select;
@@ -21,85 +21,23 @@ const formItemLayout = {
   },
 };
 
-let CheckInfo = {
-  account: [],
-  username: [],
-  email: [],
-  teamname: [],
-};
-(async () => {
-  let response = await User.GetRegisterData();
-  response.user.forEach((item) => {
-    CheckInfo.account.push(item.account);
-    CheckInfo.username.push(item.username);
-    CheckInfo.email.push(item.email);
-  });
-  response.team.forEach((item) => {
-    CheckInfo.teamname.push(item["name"]);
-  });
-})();
-
 export default function SignupModel(props) {
   const [form] = Form.useForm();
-  const [identity, setIdentity] = useState("adim");
   const [issignup, setsignup] = useState(false);
   const [showWarn, setShowWarn] = useState(false);
-  const IdentityMode = {
-    team: (
-      <React.Fragment>
-        <Form.Item
-          name="teamname"
-          label="隊伍名稱"
-          rules={[
-            {
-              required: true,
-              message: "Please input your teamname!",
-            },
-            () => ({
-              validator(_, value) {
-                if (!CheckInfo.teamname.includes(value)) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(new Error("Team name already use"));
-              },
-            }),
-          ]}
-          hasFeedback
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          name="teamdepartment"
-          label="隊伍系所"
-          rules={[
-            {
-              required: true,
-              message: "Please input your teamdepartment!",
-            },
-          ]}
-          hasFeedback
-        >
-          <Select placeholder="Select your department">
-            {Object.keys(Department.info).map((part, index) => (
-              <Option key={index} value={part}>
-                {Department.info[part]["zh"]}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-      </React.Fragment>
-    ),
-  };
 
   const handleOK = async () => {
-    if (await doSignup(form.getFieldsValue())) {
+    console.log(form.getFieldsValue());
+    const response = await User.Create(form.getFieldsValue());
+    if (response.code === 200) {
       setsignup(true);
       setShowWarn(false);
-    } else {
-      setShowWarn(true);
+      return;
     }
 
-    form.resetFields();
+    setShowWarn(true);
+    form.setFields(response.data);
+    console.log(response.data);
   };
 
   const handleCancel = () => {
@@ -161,27 +99,6 @@ export default function SignupModel(props) {
           </Form.Item>
 
           <Form.Item
-            name="username"
-            label="使用者姓名"
-            hasFeedback
-            rules={[
-              {
-                required: true,
-                message: "Please input your username!",
-              },
-              () => ({
-                validator(_, value) {
-                  if (!CheckInfo.username.includes(value)) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error("Username already use"));
-                },
-              }),
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
             name="account"
             label="使用者帳號"
             hasFeedback
@@ -190,21 +107,13 @@ export default function SignupModel(props) {
                 required: true,
                 message: "Please input your account!",
               },
-              () => ({
-                validator(_, value) {
-                  if (!CheckInfo.account.includes(value)) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error("Account already use"));
-                },
-              }),
             ]}
           >
             <Input />
           </Form.Item>
 
           <Form.Item
-            name="identity"
+            name="admin"
             label="註冊身份"
             hasFeedback
             rules={[
@@ -213,12 +122,7 @@ export default function SignupModel(props) {
               },
             ]}
           >
-            <Select
-              placeholder="Select your identity"
-              onChange={(adim) => {
-                setIdentity(adim);
-              }}
-            >
+            <Select placeholder="Select your identity">
               <Option key={1} value="administer">
                 主辦人員
               </Option>
@@ -244,7 +148,7 @@ export default function SignupModel(props) {
             <Input.Password />
           </Form.Item>
           <Form.Item
-            name="confirm"
+            name="passwordconfirm"
             label="確認密碼"
             dependencies={["password"]}
             hasFeedback
@@ -253,18 +157,6 @@ export default function SignupModel(props) {
                 required: true,
                 message: "Please confirm your password!",
               },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue("password") === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(
-                    new Error(
-                      "The two passwords that you entered do not match!"
-                    )
-                  );
-                },
-              }),
             ]}
           >
             <Input.Password />
@@ -280,20 +172,11 @@ export default function SignupModel(props) {
               {
                 required: true,
               },
-              () => ({
-                validator(_, value) {
-                  if (!CheckInfo.email.includes(value)) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error("Email already use"));
-                },
-              }),
             ]}
             hasFeedback
           >
             <Input />
           </Form.Item>
-          {IdentityMode[identity]}
         </Form>
       )}
     </Modal>

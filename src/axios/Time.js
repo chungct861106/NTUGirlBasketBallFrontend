@@ -1,6 +1,6 @@
 import axios from "axios";
-
-export const GetTimeObject = (serverURL, token) => {
+import { token } from "../axios";
+export const GetTimeObject = (serverURL) => {
   return {
     Update: async (timeString) => {
       // return status success | fail_<reason>

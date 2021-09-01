@@ -1,10 +1,10 @@
 import axios from "axios";
-
+import { token } from "../axios";
 function DateConverter(date) {
   return date !== null ? new Date(date).toISOString() : null;
 }
 
-export const GetMatchObject = (serverURL, token) => {
+export const GetMatchObject = (serverURL) => {
   return {
     GetALLMatch: async () => {
       try {
