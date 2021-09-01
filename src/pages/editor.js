@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import { User } from "../axios";
 import DepartmentInfo from "../department.json";
 import { Form, Input, Button, Typography, Select, Spin, Card } from "antd";
-import Table from "../components/table";
+
 import { usePages } from "../hooks/usePages";
 import styled from "styled-components";
-const { Text } = Typography;
 const { Option } = Select;
 const layout = {
   labelCol: {
@@ -31,137 +30,97 @@ const ContentBackground = styled.div`
 `;
 
 export const UserEditor = () => {
-  const { userInfo, id } = usePages();
-  const [username, setUsername] = useState("");
-  const [account, setAccount] = useState("");
-  const [email, setEmail] = useState("");
-  const [department, setDepartment] = useState("ME");
+  const { userInfo, setUserInfo } = usePages();
   const [onEdit, setEditMode] = useState();
+  const [form] = Form.useForm();
+  const { id, account, email, department } = userInfo;
+  console.log(userInfo);
+  const handleClick = () => {
+    if (onEdit)
+      (async () => {
+        const response = await User.Update(form.getFieldsValue());
+        if (response.code === 200) {
+          setEditMode(false);
+          setUserInfo((Info) => {
+            const { account, email, department } = form.getFieldsValue();
+            Info.account = account;
+            Info.email = email;
+            Info.department = department;
+            console.log(Info);
+            return Info;
+          });
+          return;
+        }
+        form.setFields(response.data);
+        return;
+      })();
+    else setEditMode(true);
+  };
 
-  useEffect(async () => {
-    let response = {};
-    if (id === "public") {
-      console.log("into id===public");
-      response = await User.GetAccountByID(1);
-      console.log("into id===public, response: ", response);
-    } else {
-      console.log("into id!==public", userInfo.user_id);
-      response = await User.GetAccountByID(userInfo.user_id);
-      console.log("into id!==public, response: ", response);
-    }
-    setUsername(response.username);
-    setAccount(response.account);
-    setEmail(response.email);
-    setDepartment(response.department);
-    setEditMode(false);
-  }, []);
-
-  return onEdit === undefined ? (
+  return department === undefined ? (
     <Spin size="large" style={{ marginTop: 30 }} />
   ) : (
     <ContentBackground>
-      {/* <ContentBody> */}
       <Card title="個人資訊" style={{ width: 550, margin: 25 }} bordered={true}>
-        <Form {...layout} name="basic">
-          <Form.Item label="使用者名稱" name="username" labelAlign="left">
-            {onEdit ? (
-              <Input
-                defaultValue={username}
-                style={{ width: 300 }}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                }}
-              />
-            ) : (
-              <Text strong>{username}</Text>
-            )}
-          </Form.Item>
+        <Form
+          {...layout}
+          name="basic"
+          form={form}
+          initialValues={{ id, account, email, department }}
+        >
           <Form.Item label="使用者帳號" name="account" labelAlign="left">
-            {onEdit ? (
-              <Input
-                defaultValue={account}
-                onChange={(e) => {
-                  setAccount(e.target.value);
-                }}
-                style={{ width: 300 }}
-              />
-            ) : (
-              <Text strong>{account}</Text>
-            )}
+            <Input style={{ width: 300 }} disabled={!onEdit} />
           </Form.Item>
           <Form.Item label="使用者信箱" name="email" labelAlign="left">
-            {onEdit ? (
-              <Input
-                defaultValue={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                }}
-                style={{ width: 300 }}
-              />
-            ) : (
-              <Text strong>{email}</Text>
-            )}
+            <Input style={{ width: 300 }} disabled={!onEdit} />
           </Form.Item>
           <Form.Item label="使用者學系" name="department" labelAlign="left">
-            {onEdit ? (
-              <Select
-                defaultValue={department}
-                showSearch
-                style={{ width: 300 }}
-                placeholder="Search to Select"
-                optionFilterProp="children"
-                onChange={(part) => {
-                  setDepartment(part);
-                }}
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >=
-                  0
-                }
-                filterSort={(optionA, optionB) =>
-                  optionA.children
-                    .toLowerCase()
-                    .localeCompare(optionB.children.toLowerCase())
-                }
-              >
-                {Object.keys(DepartmentInfo.info).map((part, index) => (
-                  <Option key={index} value={part}>
-                    {DepartmentInfo.info[part]["zh"]}
-                  </Option>
-                ))}
-              </Select>
-            ) : (
-              <Text strong>{DepartmentInfo.info[department]["zh"]}</Text>
-            )}
+            <Select
+              showSearch
+              style={{ width: 300 }}
+              placeholder="Search to Select"
+              optionFilterProp="children"
+              disabled={!onEdit}
+            >
+              {Object.keys(DepartmentInfo.info).map((part, index) => (
+                <Option key={index} value={part}>
+                  {DepartmentInfo.info[part]["zh"]}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
 
           <Form.Item {...tailLayout}>
-            {id !== "public" && (
+            {onEdit ? (
+              <React.Fragment>
+                <Button
+                  style={{ marginRight: 20 }}
+                  type="primary"
+                  htmlType="submit"
+                  onClick={handleClick}
+                >
+                  Submit
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  onClick={() => setEditMode(false)}
+                >
+                  Cancel
+                </Button>
+              </React.Fragment>
+            ) : (
               <Button
                 type="primary"
                 htmlType="submit"
-                onClick={() => {
-                  if (onEdit)
-                    (async () =>
-                      await User.Update(
-                        account,
-                        username,
-                        email,
-                        department
-                      ))();
-                  setEditMode((mode) => !mode);
-                }}
+                onClick={() => setEditMode(true)}
               >
-                {onEdit ? "Submit" : "Edit"}
+                Edit
               </Button>
             )}
           </Form.Item>
         </Form>
       </Card>
-      {/* <Table type="users" />
-      <Table type="teams" />
-      <Table type="recorders" />
-      <Table type="matches" /> */}
-      {/* </ContentBody> */}
     </ContentBackground>
   );
 };

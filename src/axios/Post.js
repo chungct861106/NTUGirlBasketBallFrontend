@@ -1,6 +1,6 @@
 import axios from "axios";
-
-export const GetPostObject = (serverURL, token) => {
+import { token } from "../axios";
+export const GetPostObject = (serverURL) => {
   return {
     Create: async (type, title_category, title_content, content) => {
       try {

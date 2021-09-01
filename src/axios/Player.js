@@ -1,8 +1,8 @@
 import axios from "axios";
-
-export const GetPlayerObject = (serverURL, token) => {
+import { token } from "../axios";
+export const GetPlayerObject = (serverURL) => {
   return {
-    Create: async ({ name, number, student_id, grade, team_id }) => {
+    Create: async (playerObj) => {
       // [Must] studentID            學號
       // [Must] department           隊伍
       // [Must] grade                年級
@@ -11,22 +11,16 @@ export const GetPlayerObject = (serverURL, token) => {
         let response = await axios({
           method: "POST",
           url: serverURL + "players/create",
-          data: {
-            name,
-            number,
-            student_id,
-            grade,
-            team_id,
-          },
+          data: playerObj,
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Player][Create]` + err;
+        return err.response.data;
       }
     },
 
-    Delete: async ({ player_id }) => {
+    Delete: async (player_id) => {
       // [Must] id       User ID
       // [Must] token    使用者登入憑證 {adim: administer}
       // player_id = player_id.player_id
@@ -47,13 +41,13 @@ export const GetPlayerObject = (serverURL, token) => {
       try {
         let response = await axios({
           method: "GET",
-          url: serverURL + "players/getAllPlayerByTeamId",
+          url: serverURL + "players/data",
           params: { team_id },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Player][GetAllPlayerByTeamID]` + err;
+        return err.response.data;
       }
     },
 
@@ -71,7 +65,7 @@ export const GetPlayerObject = (serverURL, token) => {
       }
     },
 
-    Update: async ({ player_id, name, number, student_id, grade, team_id }) => {
+    Update: async ({ player_id, name, number, studentID, grade, photo }) => {
       // [Must] id       Team name
       // [Must] name     Team department
       // [Must] token    {adim:team}
@@ -80,7 +74,7 @@ export const GetPlayerObject = (serverURL, token) => {
         let response = await axios({
           method: "POST",
           url: serverURL + "players/update",
-          data: { player_id, name, number, student_id, grade, team_id },
+          data: { player_id, name, number, studentID, grade, photo },
           headers: { Authorization: token },
         });
         return response.data;

@@ -13,9 +13,6 @@ const formItemLayout = {
     },
   },
   wrapperCol: {
-    // xs: {
-    //   span: ,
-    // },
     sm: {
       span: 10,
     },
@@ -28,31 +25,32 @@ export default function LoginModel(props) {
   const emailRef = useRef();
   const { setUserInfo } = usePages();
 
-  const [showWarn, setShowWarn] = useState(false);
+  const [showWarn, setShowWarn] = useState("");
   const [showForgetPw, setShowForgetPw] = useState(false);
   const [form] = Form.useForm();
 
   const handleOK = async () => {
     if (!showForgetPw) {
-      try {
-        const msg = await Login(
-          usernameRef.current.props.value,
-          passwordRef.current.props.value
-        );
-        localStorage.setItem("userInfo", JSON.stringify(msg.token));
-        setUserInfo(msg);
+      const response = await Login(
+        usernameRef.current.props.value,
+        passwordRef.current.props.value
+      );
+      if (response.code === 200) {
+        localStorage.setItem("userInfo", JSON.stringify(response.data.token));
+        setUserInfo(response.data);
         props.setVisible(false);
-        setShowWarn(false);
-      } catch (e) {
-        setShowWarn(true);
+        setShowWarn("");
+        return;
       }
+      setShowWarn(response.data);
     } else {
-      try {
-        await User.SendRemindEmail(emailRef.current.props.value);
-        setShowWarn(false);
-      } catch (e) {
-        setShowWarn(true);
+      const response = await User.SendRemindEmail(emailRef.current.props.value);
+      console.log(response);
+      if (response.code === 200) {
+        setShowWarn("");
+        return;
       }
+      setShowWarn(response.data);
     }
 
     form.resetFields();
@@ -89,11 +87,10 @@ export default function LoginModel(props) {
               <h4
                 style={{
                   textAlign: "center",
-                  visibility: showWarn ? "" : "hidden",
                   color: "red",
                 }}
               >
-                查無此信箱！
+                {showWarn}
               </h4>
               <Form.Item name="email" label="Email">
                 <Input ref={emailRef} />
@@ -105,11 +102,10 @@ export default function LoginModel(props) {
               <h4
                 style={{
                   textAlign: "center",
-                  visibility: showWarn ? "" : "hidden",
                   color: "red",
                 }}
               >
-                登入失敗!
+                {showWarn}
               </h4>
               <Form.Item name="username" label="Username">
                 <Input ref={usernameRef} />

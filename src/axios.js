@@ -29,7 +29,7 @@ const testUsers = {
 };
 
 // 調整這去改變目前使用者身分 Ex: testUser.team[0] (0號系隊使用者)
-let token = testUsers.adiminister[0];
+export let token = testUsers.adiminister[0];
 
 export const gettoken = () => {
   return token;
@@ -42,66 +42,36 @@ export const Login = async (account, password) => {
   try {
     let response = await axios({
       method: "PUT",
-      url: serverURL + "users/login",
+      url: "http://localhost:4000/" + "users/login",
       data: { account, password },
     });
-    token = response.data.token;
+    token = response.data.data.token;
     return response.data;
   } catch (err) {
-    // return `[Login][Error]` + err;
-    throw err;
+    return err.response.data;
   }
 };
 
 export const CheckToken = async (storageToken) => {
-  token = storageToken.slice(1, -1);
-
+  if (!storageToken) return;
   try {
     let response = await axios({
       method: "GET",
-      url: serverURL + "users/checkToken",
-      headers: { Authorization: token },
+      url: "http://localhost:4000/" + "users/checkToken",
+      headers: { token: storageToken.slice(1, -1) },
     });
-    return response.data.token;
+    token = storageToken.slice(1, -1);
+    return response.data;
   } catch (err) {
-    throw err;
+    return err.response.data;
   }
 };
 
-const doLogin = async (username, password) => {
-  const msg = { userid: 1, identity: "admin" };
-  return msg;
-};
-
-const doSignup = async (SignUpObj) => {
-  const { account, username, password, identity, email, department } =
-    SignUpObj;
-  await User.Create(
-    account,
-    username,
-    password,
-    password,
-    identity,
-    email,
-    department
-  );
-  if (SignUpObj["identity"] === "team") {
-    const { teamname, teamdepartment } = SignUpObj;
-    await Team.Create(teamname, teamdepartment);
-  } else if (SignUpObj["identity"] === "recorder") {
-    await Recorder.Create(username, department);
-  }
-  const msg = true;
-  return msg;
-};
-
-export { doLogin, doSignup };
-
-export const Player = GetPlayerObject(serverURL, token);
-export const User = GetUserObject(serverURL, token);
-export const Team = GetTeamObject(serverURL, token);
-export const Time = GetTimeObject(serverURL, token);
-export const Match = GetMatchObject(serverURL, token);
-export const Recorder = GetRecorderObject(serverURL, token);
-export const Post = GetPostObject(serverURL, token);
-export const Record = GetRecordObject(serverURL, token);
+export const Player = GetPlayerObject("http://localhost:4000/");
+export const User = GetUserObject("http://localhost:4000/");
+export const Team = GetTeamObject("http://localhost:4000/");
+export const Time = GetTimeObject(serverURL);
+export const Match = GetMatchObject(serverURL);
+export const Recorder = GetRecorderObject(serverURL);
+export const Post = GetPostObject(serverURL);
+export const Record = GetRecordObject(serverURL);

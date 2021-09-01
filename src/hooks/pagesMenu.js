@@ -12,7 +12,7 @@ import InChargeGame from "../pages/inChargeGame";
 import RecordTeam from "../pages/recordTeam";
 import RecordPlayer from "../pages/recordPlayer";
 import Checkteam from "../pages/Checkteam";
-
+import Contact from "../pages/Contact";
 export const pagesMenu = () => {
   return {
     News,
@@ -29,5 +29,6 @@ export const pagesMenu = () => {
     RecordPlayer,
     Checkteam,
     SchedulerRead,
+    Contact,
   };
 };
