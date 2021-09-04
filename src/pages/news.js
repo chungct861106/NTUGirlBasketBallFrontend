@@ -75,8 +75,6 @@ export default function News() {
     setNews(() => newsResult);
   }, [userInfo]);
 
-  console.log("return result: ", images, news);
-
   return (
     <React.Fragment>
       <div className="ant-layout-content" style={{ height: "1000px" }}>

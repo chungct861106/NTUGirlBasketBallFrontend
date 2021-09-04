@@ -12,148 +12,100 @@ export const GetTeamObject = (serverURL) => {
         });
         return response.data;
       } catch (err) {
-        return err.response.data;
+        return err.response.message;
       }
     },
 
-    Status: async (id, status) => {
-      // [Must] id       User ID
-      // [Must] status   ['已報名', '已繳費', '審核中', '未報名', '未繳費']
-      // [Myst] token    {adim:adimister}
-
-      try {
-        let response = await axios({
-          method: "POST",
-          url: serverURL + "teams/status",
-          data: { id, status },
-          headers: { Authorization: token },
-        });
-        return response.data;
-      } catch (err) {
-        return `[Error][Team][SetStatus]` + err;
-      }
-    },
-
-    Delete: async (id) => {
-      try {
-        let response = await axios({
-          method: "DELETE",
-          url: serverURL + "teams/delete",
-          data: { team_id: id },
-          headers: { Authorization: token },
-        });
-        return response.data;
-      } catch (err) {
-        return err.response.data;
-      }
-    },
-
-    GetTeamByID: async (id) => {
-      // [Must] id       User ID
-      // [Must] token    {adim:adimister}
-
-      try {
-        let response = await axios({
-          method: "GET",
-          url: serverURL + "teams/data",
-          query: { user_id: id },
-          headers: { Authorization: token },
-        });
-        return response.data;
-      } catch (err) {
-        return err.response.data;
-      }
-    },
-
-    GetALLTeam: async () => {
-      // [Must] token    {adim:adimister}
-
-      try {
-        let response = await axios({
-          method: "GET",
-          url: serverURL + "teams/getALL",
-          headers: { Authorization: token },
-        });
-        return response.data;
-      } catch (err) {
-        return `[Error][Team][GetALL]` + err;
-      }
-    },
-    GetTeamIDbyUser: async (user_id) => {
-      // [Must] token    {adim:adimister}
-      try {
-        let response = await axios({
-          method: "GET",
-          url: serverURL + "teams/data",
-          headers: { Authorization: token },
-          query: { user_id },
-        });
-        return response.data;
-      } catch (err) {
-        return err.response.data;
-      }
-    },
-    GetInterGame: async () => {
-      // [Must] token {adim: adiminister}
-      try {
-        let response = await axios({
-          method: "GET",
-          url: serverURL + "teams/getInterGame",
-          headers: { Authorization: token },
-        });
-        return response.data;
-      } catch (err) {
-        return `[Error][Team][GetInterGame]` + err;
-      }
-    },
-
-    Update: async (team_id, name, department) => {
+    Update: async (
+      team_id = null,
+      session_preGame = null,
+      session_interGame = null,
+      name = null,
+      department = null,
+      user_id = null
+    ) => {
       try {
         let response = await axios({
           method: "POST",
           url: serverURL + "teams/update",
-          data: { team_id, name, department },
+          data: {
+            team_id,
+            session_preGame,
+            session_interGame,
+            name,
+            department,
+            user_id,
+          },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return err.response.data;
+        return err.response.message;
       }
     },
-    UpdatePaid: async (team_id, status) => {
-      // [Must] id       Team name
-      // [Must] name     Team department
-      // [Must] token    {adim:team}
-
+    Assign: async (
+      team_id,
+      session_preGame = null,
+      session_interGame = null
+    ) => {
       try {
         let response = await axios({
           method: "POST",
-          url: serverURL + "teams/updatePaid",
-          data: { team_id, status },
-          headers: { Authorization: token },
+          url: serverURL + "teams/assign",
+          data: {
+            team_id,
+            session_preGame,
+            session_interGame,
+          },
+          headers: {
+            Authorization: token,
+          },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Team][UpdatePaid]` + err;
+        return err.response.message;
       }
     },
 
-    UpdateSession: async (sessionType, id, teamSession) => {
-      // [Must] sessionType     preGame || interGame
-      // [Must] id              Team ID
-      // [Must] teamSession     Team assined session
-      // [Must] token           {adim: adimister}
-
+    Delete: async (team_id) => {
       try {
         let response = await axios({
-          method: "POST",
-          url: serverURL + "teams/update_session",
-          data: { sessionType, id, teamSession },
+          method: "DELETE",
+          url: serverURL + "teams/delete",
+          data: { team_id },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[ERROR][Team][Update_session]` + err;
+        return err.response.message;
+      }
+    },
+
+    GetTeam: async (
+      team_id = null,
+      session_preGame = null,
+      session_interGame = null,
+      name = null,
+      department = null,
+      user_id = null
+    ) => {
+      try {
+        let response = await axios({
+          method: "GET",
+          url: serverURL + "teams/data",
+          params: {
+            team_id,
+            session_preGame,
+            session_interGame,
+            name,
+            department,
+            user_id,
+          },
+          headers: { Authorization: token },
+        });
+        return response.data.data;
+      } catch (err) {
+        return err.response.data.message;
       }
     },
 
@@ -161,13 +113,19 @@ export const GetTeamObject = (serverURL) => {
       try {
         let response = await axios({
           method: "GET",
-          url: serverURL + "teams/checkFillSession",
-          params: { sessionType },
+          url: serverURL + "teams/data",
           headers: { Authorization: token },
         });
-        return response.data;
+
+        if (sessionType === "session_preGame") {
+          console.log(
+            "in axios team, check session_preGame, ",
+            response.data.data
+          );
+        }
+        return response.data.data;
       } catch (err) {
-        throw err;
+        return err.response.data.message;
       }
     },
   };

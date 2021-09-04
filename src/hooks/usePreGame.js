@@ -10,30 +10,34 @@ export const usePreGame = () => {
   const [mapDict, setMapDict] = useState({});
 
   useEffect(() => {
-    // initial
+    effect();
+
     async function effect() {
-      const preGameData = await Team.GetALLTeam();
+      const preGameData = await Team.GetTeam();
+      let ifEditable = false;
       let newData = [];
-      Object.entries(preGameData).forEach((data) =>
+      Object.entries(preGameData).forEach((data) => {
+        if (data[1].session_preGame === "Not Arranged") {
+          ifEditable = true;
+        }
         newData.push({
-          key: data[1].team_id,
+          key: data[1]._id,
           name: data[1].name,
-          session: data[1].session_preGame,
-        })
-      );
-      setPreGameTable(newData);
+          session:
+            data[1].session_preGame === "Not Arranged"
+              ? "--"
+              : data[1].session_preGame,
+        });
+      });
+      setPreGameTable(() => newData);
+      setEditable(() => ifEditable);
 
       try {
-        // initial Editable
-        const stage = "preGame";
-        const ifStage = await Match.CheckIfStage(stage);
-        setEditable(() => (ifStage ? false : true));
-
         // initial cycle3, 4
         let totalCycle = preGameData.length;
         if (totalCycle - (totalCycle % 3) * 4 >= 0) {
-          setCycle3((totalCycle - (totalCycle % 3) * 4) / 3);
-          setCycle4(totalCycle % 3);
+          setCycle3(() => (totalCycle - (totalCycle % 3) * 4) / 3);
+          setCycle4(() => totalCycle % 3);
         } else {
           console.log("in preGame, error with the team number");
         }
@@ -41,8 +45,6 @@ export const usePreGame = () => {
         console.log("in preGame, initial false");
       }
     }
-
-    effect();
   }, []);
 
   useEffect(() => {
@@ -118,6 +120,7 @@ export const usePreGame = () => {
     });
 
     const teamSessionFill = await Team.CheckFillSession("session_preGame");
+
     if (teamSessionFill) {
       const havePreGame = await Match.CheckIfStage("preGame");
       if (havePreGame) {
