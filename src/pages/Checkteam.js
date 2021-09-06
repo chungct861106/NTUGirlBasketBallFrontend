@@ -9,11 +9,14 @@ import {
   Select,
   Modal,
   message,
+  Upload,
+  Image,
 } from "antd";
-import { Team, Player } from "../axios";
+import { Team, Player, GenerateImageURL } from "../axios";
 import { usePages } from "../hooks/usePages";
 import Departments from "../department.json";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
+import ImgCrop from "antd-img-crop";
 const { Option } = Select;
 export default function CheckTeams() {
   const { userInfo } = usePages();
@@ -361,6 +364,7 @@ function PlayersTable({ teamID }) {
   const [onDeletePlayer, setOnDeletePlayer] = useState(false);
   const [playerID, setPlayerID] = useState({});
   const [loading, setLoading] = useState(true);
+  const [ImageFile, setImageFile] = useState([]);
   const [form] = Form.useForm();
   useEffect(async () => {
     setLoading(true);
@@ -414,6 +418,28 @@ function PlayersTable({ teamID }) {
       return;
     }
     message.error(response.message);
+  };
+
+  const onImageChange = async ({ fileList: newFileList }) => {
+    setImageFile([newFileList[newFileList.length - 1]]);
+  };
+  const onImagePreview = async (file) => {
+    let src = file.url;
+    if (!src) {
+      src = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file.originFileObj);
+        reader.onload = () => resolve(reader.result);
+      });
+    }
+    const image = new Image();
+    image.src = src;
+    const imgWindow = window.open(src);
+    imgWindow.document.write(image.outerHTML);
+  };
+  const onUploadFile = async ({ file }) => {
+    const response = await GenerateImageURL(file);
+    console.log(response);
   };
   const columns = [
     {
@@ -618,6 +644,18 @@ function PlayersTable({ teamID }) {
             <Input />
           </Form.Item>
         </Form>
+
+        <ImgCrop rotate aspect={2} onModalOk={() => console.log("Uploaded")}>
+          <Upload
+            action="https://api.imgur.com/3/image"
+            listType="picture-card"
+            onChange={onImageChange}
+            onPreview={onImagePreview}
+            fileList={ImageFile}
+          >
+            上傳學生證
+          </Upload>
+        </ImgCrop>
       </Modal>
       <Modal
         visible={onDeletePlayer}

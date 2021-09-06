@@ -1,11 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
+import { Select, Form } from "antd";
 import Scheduler, { View } from "devextreme-react/scheduler";
-import { Time } from "../axios";
+import { LoadPanel } from "devextreme-react/load-panel";
+import { Team, Time } from "../axios";
+import { usePages } from "../hooks/usePages";
 import "devextreme/dist/css/dx.common.css";
 import "devextreme/dist/css/dx.light.css";
 import "../css/scheduler.css";
-
-const currentDate = new Date(2021, 4, 24);
+import "../css/timer.css";
+const { Option } = Select;
+const currentDate = new Date(2021, 1, 1);
 const views = ["workWeek"];
 const TimeRangeObject = { 1: "12:30", 2: "18:30", 3: "19:30" };
 
@@ -32,101 +36,115 @@ function DataCell(props) {
   return <div className={cellName}>{text}</div>;
 }
 
-let timeString = "No Update";
 function App() {
+  const [loading, setloading] = useState(true);
   const scheduler = useRef(null);
-  const [appointments] = useState([]);
-
-  const AddbusyTime = (data) => {
-    let newappointments = {
-      startDate: data.cellData.startDate,
-      endDate: data.cellData.endDate,
-    };
-    const WeekDay = newappointments.startDate.getDay();
-    if (
-      newappointments.startDate.getHours() === 1 &&
-      (WeekDay === 2 || WeekDay === 4)
-    )
-      return;
-    if (
-      scheduler.current.props.dataSource.find(
-        (x) =>
-          new Date(x.startDate).toUTCString() ===
-          newappointments.startDate.toUTCString()
-      ) === undefined
-    )
-      scheduler.current.instance.addAppointment(newappointments);
-    console.log(newappointments);
-    SetTimeString();
+  const [timeNumbers, setNumbers] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const { userInfo } = usePages();
+  const { user_id } = userInfo;
+  const [form] = Form.useForm();
+  const toAppointment = (number) => ({
+    startDate: new Date(2021, 1, parseInt(number / 3) + 1, (number % 3) + 1),
+    endDate: new Date(2021, 1, parseInt(number / 3) + 1, (number % 3) + 2),
+  });
+  const AddbusyTime = async (data) => {
+    const newAppointment = data.cellData;
+    const WeekDay = newAppointment.startDate.getDay();
+    const Hour = newAppointment.startDate.getHours();
+    if (Hour === 1 && (WeekDay === 2 || WeekDay === 4)) return;
+    const TimeNumber = (WeekDay - 1) * 3 + Hour - 1;
+    if (timeNumbers.includes(TimeNumber)) return;
+    setNumbers((data) => [...data, TimeNumber]);
+    await Time.TeamAppointment(form.getFieldValue("team"), TimeNumber);
   };
 
-  const DeleteAppointment = (event) => {
-    scheduler.current.instance.deleteAppointment(event.appointmentData);
-    SetTimeString();
+  const DeleteAppointment = async (event) => {
+    const WeekDay = event.appointmentData.startDate.getDay();
+    const Hour = event.appointmentData.startDate.getHours();
+    const TimeNumber = (WeekDay - 1) * 3 + Hour - 1;
+    setNumbers((data) => [...data].filter((num) => num != TimeNumber));
+    await Time.TeamAppointment(form.getFieldValue("team"), TimeNumber);
   };
 
-  const SetTimeString = () => {
-    let timeListes = [...scheduler.current.props.dataSource].map((x) => {
-      let out = new Date(x.startDate);
-      return out.toISOString();
-    });
-    timeString = timeListes.filter((x) => x !== "Invalid Date").join(",");
+  const onTeamChanged = async (id) => {
+    setNumbers([]);
+    setloading(true);
+    const timeResponse = await Time.GetTeamTimeByID(id);
+    if (timeResponse.code === 200) setNumbers(timeResponse.data.time);
+    setloading(false);
   };
 
-  useEffect(() => {
-    const GetData = async () => {
-      const timeResponse = await Time.GetTime();
-      if (timeResponse.length > 0)
-        timeResponse.map((time) => {
-          scheduler.current.instance.addAppointment(time);
-          return true;
-        });
-    };
-    GetData();
-    return () => {
-      console.log(timeString);
-      if (timeString !== "No Update") {
-        (async () => {
-          console.log("Updated", timeString);
-          await Time.Update(timeString);
-        })();
+  useEffect(async () => {
+    const response = await Team.GetTeamByID(user_id);
+    if (response.code === 200) {
+      setTeams(
+        response.data.map((team) => ({ value: team._id, name: team.name }))
+      );
+      if (response.data.length > 0) {
+        form.setFieldsValue({ team: response.data[0]._id });
+        const timeResponse = await Time.GetTeamTimeByID(response.data[0]._id);
+        if (timeResponse.code === 200) setNumbers(timeResponse.data.time);
       }
-    };
+    }
+    setloading(false);
   }, []);
 
   return (
     <React.Fragment>
-      <Scheduler
-        appointmentComponent={Appointment}
-        onAppointmentClick={DeleteAppointment}
-        ref={scheduler}
-        dataSource={appointments}
-        timeZone="Asia/Taipei"
-        id="scheduler"
-        defaultCurrentDate={currentDate}
-        startDayHour={1}
-        endDayHour={4}
-        cellDuration={60}
-        dataCellComponent={DataCell}
-        views={views}
-        onCellClick={AddbusyTime}
-        defaultCurrentView={views[0]}
-        timeCellRender={TimeCell}
-        editing={{
-          allowAdding: false,
-          allowDeleting: false,
-          allowResizing: false,
-          allowDragging: false,
-          allowUpdating: false,
+      <Form
+        form={form}
+        style={{
+          marginLeft: 40,
+          marginTop: 20,
+          width: "30%",
         }}
       >
-        <View
-          type="timelineWeek"
-          name="Timeline Week"
-          groupOrientation="horizontal"
-          maxAppointmentsPerCell={1}
-        />
-      </Scheduler>
+        <Form.Item label="選擇隊伍" name="team">
+          <Select onChange={onTeamChanged}>
+            {teams.map((team) => (
+              <Option value={team.value}>{team.name}</Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Form>
+      <div id="scheduler-container">
+        <Scheduler
+          appointmentComponent={Appointment}
+          onAppointmentClick={DeleteAppointment}
+          ref={scheduler}
+          dataSource={timeNumbers.map((num) => toAppointment(num))}
+          timeZone="Asia/Taipei"
+          defaultCurrentDate={currentDate}
+          startDayHour={1}
+          endDayHour={4}
+          cellDuration={60}
+          dataCellComponent={DataCell}
+          views={views}
+          onCellClick={AddbusyTime}
+          defaultCurrentView={views[0]}
+          timeCellRender={TimeCell}
+          editing={{
+            allowAdding: false,
+            allowDeleting: false,
+            allowResizing: false,
+            allowDragging: false,
+            allowUpdating: false,
+          }}
+        >
+          <View
+            type="timelineWeek"
+            name="Timeline Week"
+            groupOrientation="horizontal"
+            maxAppointmentsPerCell={1}
+          />
+        </Scheduler>
+      </div>
+      <LoadPanel
+        shadingColor="rgba(0,0,0,0.4)"
+        position={{ of: "#scheduler-container" }}
+        visible={loading}
+      />
     </React.Fragment>
   );
 }

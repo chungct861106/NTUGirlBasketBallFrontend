@@ -2,72 +2,44 @@ import axios from "axios";
 import { token } from "../axios";
 export const GetTimeObject = (serverURL) => {
   return {
-    Update: async (timeString) => {
-      // return status success | fail_<reason>
-
-      // [Must] timeString   沒空時間字串
-      // [Must] token        {administer: team}
+    TeamAppointment: async (teamID, timeNumber) => {
       try {
         let response = await axios({
-          method: "POST",
-          url: serverURL + "time/update",
-          data: { timeString },
+          method: "PUT",
+          url: serverURL + "time/team/appoint",
+          data: { teamID, timeNumber },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Time][Update]` + err;
+        return err.response.data;
       }
     },
 
-    Delete: async (id) => {
-      // return status success | fail_<reason>
-
-      // [Must] id            刪除使用者沒空紀錄
-      // [Must] token        {administer: team}
-
-      try {
-        let response = await axios({
-          method: "DELETE",
-          url: serverURL + "time/delete",
-          data: { id },
-          headers: { Authorization: token },
-        });
-        return response.data;
-      } catch (err) {
-        return `[Error][Time][Delete]` + err;
-      }
-    },
-
-    GetALLTime: async () => {
-      // return status success | fail_<reason>
-      // [Must] token        {administer: administer}
-
+    GetTeamTimeByID: async (team_id) => {
       try {
         let response = await axios({
           method: "GET",
-          url: serverURL + "time/getALL",
+          url: serverURL + "time/team",
+          params: { team_id },
+          headers: { Authorization: token },
+        });
+        return response.data;
+      } catch (err) {
+        return err.response.data;
+      }
+    },
+    GetRecorderTimeByID: async (user_id) => {
+      try {
+        let response = await axios({
+          method: "GET",
+          url: serverURL + "/time/recorder",
+          params: { user_id },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
         return `[Error][Time][GetAllTime]` + err;
-      }
-    },
-
-    GetTime: async () => {
-      // return status success | fail_<reason>
-      // [Must] token        {administer: team}
-
-      try {
-        let response = await axios({
-          method: "GET",
-          url: serverURL + "time/data",
-          headers: { Authorization: token },
-        });
-        return response.data;
-      } catch (err) {
-        return `[Error][Time][GetTime]` + err;
       }
     },
   };

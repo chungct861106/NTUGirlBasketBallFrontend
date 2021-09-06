@@ -29,7 +29,7 @@ const testUsers = {
 };
 
 // 調整這去改變目前使用者身分 Ex: testUser.team[0] (0號系隊使用者)
-export let token = testUsers.adiminister[0];
+export let token;
 
 export const gettoken = () => {
   return token;
@@ -54,11 +54,12 @@ export const Login = async (account, password) => {
 
 export const CheckToken = async (storageToken) => {
   if (!storageToken) return;
+  console.log(storageToken.slice(1, -1));
   try {
     let response = await axios({
       method: "GET",
       url: "http://localhost:4000/" + "users/checkToken",
-      headers: { token: storageToken.slice(1, -1) },
+      params: { token: storageToken.slice(1, -1) },
     });
     token = storageToken.slice(1, -1);
     return response.data;
@@ -66,11 +67,37 @@ export const CheckToken = async (storageToken) => {
     return err.response.data;
   }
 };
+const albumID = "Z4LjKQ0";
+const Imgur_token = "393fff07730c55c1c282d8dc52e480bda592a6c6";
+export const GenerateImageURL = async (file) => {
+  console.log(file);
+  let formData = new FormData();
+  formData.append("image", file);
+  formData.append("title", "test");
+  formData.append("description", "testing");
+  formData.append("album", albumID); // 有要指定的相簿就加這行
+  const response = await axios({
+    method: "POST",
+    url: "https://api.imgur.com/3/image",
+    data: formData,
+    headers: {
+      Authorization: "Bearer " + Imgur_token, //放置你剛剛申請的Client-ID
+    },
+    mimeType: "multipart/form-data",
+  })
+    .then((res) => {
+      console.log(res);
+    })
+    .catch((e) => {
+      console.log(e);
+    });
+  console.log(response);
+};
 
 export const Player = GetPlayerObject("http://localhost:4000/");
 export const User = GetUserObject("http://localhost:4000/");
 export const Team = GetTeamObject("http://localhost:4000/");
-export const Time = GetTimeObject(serverURL);
+export const Time = GetTimeObject("http://localhost:4000/");
 export const Match = GetMatchObject(serverURL);
 export const Recorder = GetRecorderObject(serverURL);
 export const Post = GetPostObject(serverURL);
