@@ -51,7 +51,6 @@ export const GetUserObject = (serverURL) => {
     GetAccountByID: async (id) => {
       // [Must] id       User ID
       // [Must] token    使用者登入憑證 excpet for {adim: public}
-      console.log(token);
       try {
         let response = await axios({
           method: "GET",
@@ -65,19 +64,20 @@ export const GetUserObject = (serverURL) => {
       }
     },
 
-    GetALLAccount: async () => {
+    GetAccount: async (userQuery) => {
       // [Must] id       User ID
       // [Must] token    使用者登入憑證 {adim: administer}
 
       try {
         let response = await axios({
           method: "GET",
-          url: serverURL + "users/getALL",
+          url: serverURL + "users/data",
           headers: { Authorization: token },
+          params: userQuery,
         });
         return response.data;
       } catch (err) {
-        return `[Error][User][GetALLData]` + err;
+        return err.response.data;
       }
     },
     SendRemindEmail: async (email) => {

@@ -67,38 +67,26 @@ export const CheckToken = async (storageToken) => {
     return err.response.data;
   }
 };
-const albumID = "Z4LjKQ0";
-const Imgur_token = "393fff07730c55c1c282d8dc52e480bda592a6c6";
-export const GenerateImageURL = async (file) => {
-  console.log(file);
-  let formData = new FormData();
-  formData.append("image", file);
-  formData.append("title", "test");
-  formData.append("description", "testing");
-  formData.append("album", albumID); // 有要指定的相簿就加這行
-  const response = await axios({
-    method: "POST",
-    url: "https://api.imgur.com/3/image",
-    data: formData,
-    headers: {
-      Authorization: "Bearer " + Imgur_token, //放置你剛剛申請的Client-ID
-    },
-    mimeType: "multipart/form-data",
-  })
-    .then((res) => {
-      console.log(res);
-    })
-    .catch((e) => {
-      console.log(e);
-    });
-  console.log(response);
+export const GenerateImageURL = async (image) => {
+  try {
+    const data = new FormData();
+    data.append("file", image);
+    data.append("upload_preset", "ntugirlbasketball");
+    const response = await axios.post(
+      "https://api.cloudinary.com/v1_1/delpywtpj/image/upload",
+      data
+    );
+    return { code: response.status, url: response.data.url };
+  } catch (err) {
+    return { code: 400, message: err.response.data };
+  }
 };
 
 export const Player = GetPlayerObject("http://localhost:4000/");
 export const User = GetUserObject("http://localhost:4000/");
 export const Team = GetTeamObject("http://localhost:4000/");
 export const Time = GetTimeObject("http://localhost:4000/");
-export const Match = GetMatchObject(serverURL);
+export const Match = GetMatchObject("http://localhost:4000/");
 export const Recorder = GetRecorderObject(serverURL);
 export const Post = GetPostObject(serverURL);
 export const Record = GetRecordObject(serverURL);

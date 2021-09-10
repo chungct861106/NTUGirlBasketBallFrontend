@@ -29,6 +29,20 @@ export const GetTimeObject = (serverURL) => {
         return err.response.data;
       }
     },
+    GetALLTeamTime: async () => {
+      try {
+        let response = await axios({
+          method: "GET",
+          url: serverURL + "time/data",
+          params: { type: "team" },
+          headers: { Authorization: token },
+        });
+        return response.data;
+      } catch (err) {
+        return err.response.data;
+      }
+    },
+
     GetRecorderTimeByID: async (user_id) => {
       try {
         let response = await axios({

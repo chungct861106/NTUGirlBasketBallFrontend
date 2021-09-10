@@ -7,7 +7,7 @@ import { usePages } from "../hooks/usePages";
 import "devextreme/dist/css/dx.common.css";
 import "devextreme/dist/css/dx.light.css";
 import "../css/scheduler.css";
-import "../css/timer.css";
+
 const { Option } = Select;
 const currentDate = new Date(2021, 1, 1);
 const views = ["workWeek"];
@@ -87,6 +87,7 @@ function App() {
         if (timeResponse.code === 200) setNumbers(timeResponse.data.time);
       }
     }
+
     setloading(false);
   }, []);
 
@@ -108,7 +109,7 @@ function App() {
           </Select>
         </Form.Item>
       </Form>
-      <div id="scheduler-container">
+      <div id="scheduler-container" className="timer">
         <Scheduler
           appointmentComponent={Appointment}
           onAppointmentClick={DeleteAppointment}
