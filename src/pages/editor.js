@@ -34,7 +34,6 @@ export const UserEditor = () => {
   const [onEdit, setEditMode] = useState();
   const [form] = Form.useForm();
   const { id, account, email, department } = userInfo;
-  console.log(userInfo);
   const handleClick = () => {
     if (onEdit)
       (async () => {

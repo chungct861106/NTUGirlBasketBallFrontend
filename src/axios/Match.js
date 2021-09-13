@@ -10,31 +10,26 @@ export const GetMatchObject = (serverURL) => {
       try {
         let response = await axios({
           method: "GET",
-          url: serverURL + "matches/getALL",
+          url: serverURL + "matches/data",
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Match][GetALL]` + err;
+        return err.response.data;
       }
     },
 
-    Update: async (id, startDate, field, recorder_id) => {
+    UpdateScheduler: async ({ _id, startDate, recorder, field }) => {
       try {
         let response = await axios({
           method: "POST",
           url: serverURL + "matches/update",
-          data: {
-            match_id: id,
-            startDate: DateConverter(startDate) || null,
-            field: field,
-            recorder_id: recorder_id,
-          },
+          data: { match_id: _id, startDate, recorder, field },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Match][Update]` + err;
+        return err.response.data;
       }
     },
 

@@ -29,7 +29,7 @@ const testUsers = {
 };
 
 // 調整這去改變目前使用者身分 Ex: testUser.team[0] (0號系隊使用者)
-export let token = testUsers.adiminister[0];
+export let token;
 
 export const gettoken = () => {
   return token;
@@ -54,11 +54,12 @@ export const Login = async (account, password) => {
 
 export const CheckToken = async (storageToken) => {
   if (!storageToken) return;
+  console.log(storageToken.slice(1, -1));
   try {
     let response = await axios({
       method: "GET",
       url: "http://localhost:4000/" + "users/checkToken",
-      headers: { token: storageToken.slice(1, -1) },
+      params: { token: storageToken.slice(1, -1) },
     });
     token = storageToken.slice(1, -1);
     return response.data;
@@ -66,12 +67,26 @@ export const CheckToken = async (storageToken) => {
     return err.response.data;
   }
 };
+export const GenerateImageURL = async (image) => {
+  try {
+    const data = new FormData();
+    data.append("file", image);
+    data.append("upload_preset", "ntugirlbasketball");
+    const response = await axios.post(
+      "https://api.cloudinary.com/v1_1/delpywtpj/image/upload",
+      data
+    );
+    return { code: response.status, url: response.data.url };
+  } catch (err) {
+    return { code: 400, message: err.response.data };
+  }
+};
 
 export const Player = GetPlayerObject("http://localhost:4000/");
 export const User = GetUserObject("http://localhost:4000/");
 export const Team = GetTeamObject("http://localhost:4000/");
-export const Time = GetTimeObject(serverURL);
-export const Match = GetMatchObject(serverURL);
+export const Time = GetTimeObject("http://localhost:4000/");
+export const Match = GetMatchObject("http://localhost:4000/");
 export const Recorder = GetRecorderObject(serverURL);
 export const Post = GetPostObject(serverURL);
 export const Record = GetRecordObject(serverURL);

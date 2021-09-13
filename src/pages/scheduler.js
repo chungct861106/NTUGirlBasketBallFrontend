@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { message, Modal, Image, Table, Select, Button, Form } from "antd";
 import Scheduler, {
   AppointmentDragging,
   Resource,
@@ -6,15 +7,16 @@ import Scheduler, {
 } from "devextreme-react/scheduler";
 import Draggable from "devextreme-react/draggable";
 import ScrollView from "devextreme-react/scroll-view";
-import notify from "devextreme/ui/notify";
 import AppointmentFormat from "../components/Appointment";
-import AppointmentTooltip from "../components/AppointmentTooltip";
 import "devextreme/dist/css/dx.common.css";
 import "devextreme/dist/css/dx.light.css";
 import "../css/scheduler.css";
-import { Match, Time } from "../axios";
+import { Match, Time, User } from "../axios";
 import { LoadPanel } from "devextreme-react/load-panel";
-const currentDate = new Date(2021, 4, 24);
+import { usePages } from "../hooks/usePages";
+
+const { Option } = Select;
+
 const views = ["workWeek"];
 const draggingGroupName = "appointmentsGroup";
 const TimeRangeObject = { 1: "12:30", 2: "18:30", 3: "19:30" };
@@ -37,495 +39,407 @@ const TimeCell = ({ date }) => {
   return <div style={{ margin: "0 auto" }}>{text}</div>;
 };
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.uploading = false;
-    this.state = {
-      appointments: [],
-      busytime: {},
-      recorders: {},
-      teams: {},
-      currentAppointment: null,
-      loading: true,
-    };
-    this.scheduler = React.createRef();
-  }
-  startupload = () => {
-    this.setState(() => ({ loading: true }));
-    notify("Uploading");
-  };
-  endupload = () => {
-    this.setState(() => ({ loading: false }));
-    notify("Uploaded");
-  };
-  componentWillUnmount = () => {};
+const testData = [];
 
-  componentDidMount = () => {
-    (async () => {
-      let allmatches = (await Match.GetALLMatch()).filter(
-        (x) => x.stage === "preGame"
-      );
-      allmatches.forEach((match, index) => {
-        match.text = `${match.home} vs ${match.away}`;
-        match.startDate = new Date(match.startDate);
-      });
-      let responseTime = await Time.GetALLTime();
-      let setbusytime = {},
-        setrecorder = [],
-        setteam = {},
-        teamtime = {};
-      responseTime.recorderTimes.forEach((x) => {
-        setrecorder.push({ name: x.name, department: x.department, id: x.id });
-        x.times.forEach((time) => {
-          if (time in setbusytime) setbusytime[time].recorder.push(x.name);
-          else {
-            setbusytime[time] = { recorder: [x.name] };
-          }
-        });
-      });
-      responseTime.teamTimes.forEach((x) => {
-        setteam[x.name] = x.department;
-        teamtime[x.name] = x.times;
-      });
-      this.setState(() => ({
-        appointments: allmatches,
-        teams: setteam,
-        recorders: setrecorder,
-        busytime: setbusytime,
-        teamtime,
-        loading: false,
-      }));
-    })();
-  };
+export default function MyScheduler() {
+  const [loading, setLoading] = useState(true);
+  const [matches, setMatches] = useState([]);
+  const [arrangedMatches, setArranged] = useState(testData);
+  const [teamBusyTime, setTeamBusyTime] = useState({});
+  const [AllBusyTime, setbusytime] = useState({});
+  const [recorders, setRecorders] = useState([]);
+  const [recorderBusyTime, setRecorderBusyTime] = useState({});
+  const [gameType, setGameType] = useState("preGame");
+  const [onEditAppointment, setOnEdit] = useState(false);
+  const [target, setTarget] = useState(null);
+  const scheduler = useRef();
+  const { userInfo } = usePages();
+  const { user_id } = userInfo;
 
-  showTeamBusy = (home, away) => {
-    let thisbusy = {};
-    if (home in this.state.teamtime)
-      this.state.teamtime[home].map((time) => {
-        thisbusy[time] = `${home}: 無法出賽`;
-        return true;
-      });
-    if (away in this.state.teamtime)
-      this.state.teamtime[away].map((time) => {
-        if (time in thisbusy) thisbusy[time] = `${home}, ${away}: 無法出賽`;
-        else thisbusy[time] = `${away}: 無法出賽`;
-        return true;
-      });
-
-    for (let time in thisbusy) {
-      let element = document.getElementById(time + "-0");
-      if (element !== null) {
-        element.textContent = thisbusy[time];
-        element.className = "unable-date";
+  const showTeamBusy = (match) => {
+    const BusyTime = {};
+    if (match.home._id in teamBusyTime)
+      for (let time of teamBusyTime[match.home._id])
+        BusyTime[time] = match.home.name;
+    if (match.away._id in teamBusyTime)
+      for (let time of teamBusyTime[match.away._id]) {
+        if (time in BusyTime) BusyTime[time] += ` ${match.away.name}`;
+        else BusyTime[time] = match.away.name;
       }
-      let element2 = document.getElementById(time + "-1");
-      if (element2 !== null) {
-        element2.textContent = thisbusy[time];
-        element2.className = "unable-date";
+    const timeCells = document.getElementsByClassName("time-cell");
+    for (let element of timeCells) {
+      const TimeNumber = element.id.split("-")[0];
+      if (TimeNumber.length === 0) continue;
+      if (parseInt(TimeNumber) in BusyTime) {
+        element.innerHTML = BusyTime[parseInt(TimeNumber)];
       }
     }
   };
-
-  closeTeamBusy = () => {
-    let elements = document.getElementsByClassName("unable-date");
-    let number = elements.length;
-    for (let i = 0; i < number; i++) {
-      elements[i].textContent = "";
+  const closeTeamBusy = () => {
+    const timeCells = document.getElementsByClassName("time-cell");
+    for (let element of timeCells) {
+      element.textContent = "";
     }
   };
-
-  render() {
-    const { appointments } = this.state;
-    return (
-      <React.Fragment>
-        <div
-          id="scheduler-container"
-          style={{ display: "flex", flexDirection: "column" }}
-        >
-          <Scheduler
-            ref={this.scheduler}
-            adaptivityEnabled={true}
-            timeZone="Asia/Taipei"
-            id="scheduler"
-            dataSource={appointments.filter((x) => x.arranged === true)}
-            defaultCurrentDate={currentDate}
-            height={"100%"}
-            startDayHour={1}
-            endDayHour={4}
-            cellDuration={60}
-            editing={{
-              allowAdding: true,
-              allowDeleting: true,
-              allowResizing: false,
-              allowDragging: true,
-              allowUpdating: true,
-            }}
-            groupByDate={true}
-            groups={["field"]}
-            views={views}
-            dataCellComponent={this.DataCell}
-            defaultCurrentView={views[0]}
-            appointmentComponent={AppointmentFormat}
-            appointmentTooltipComponent={AppointmentTooltip}
-            onAppointmentFormOpening={this.onAppointmentFormOpening}
-            onAppointmentUpdating={this.onAppointmentUpdating}
-            onAppointmentAdded={this.onAppointmentAdd}
-            timeCellRender={TimeCell}
-          >
-            <Resource
-              fieldExpr="field"
-              allowMultiple={false}
-              dataSource={FieldData}
-              label="Field"
-            />
-            <View
-              type="timelineWeek"
-              name="Timeline Week"
-              groupOrientation="horizontal"
-              maxAppointmentsPerCell={1}
-            />
-            <AppointmentDragging
-              group={draggingGroupName}
-              onRemove={this.onAppointmentRemove}
-              onAdd={this.onAppointmentAdd}
-              onDragEnd={this.onAppointmentDragEnd}
-              onDragStart={this.onAppointmentDragStart}
-            />
-          </Scheduler>
-          <h1 style={{ marginLeft: 50 }}>賽程</h1>
-          <ScrollView
-            id="scroll"
-            direction="both"
-            height={50}
-            width={"100%"}
-            bounceEnabled={true}
-            showScrollbar="always"
-            useNative={false}
-          >
-            <Draggable
-              id="DragList"
-              data="dropArea"
-              height={50}
-              group={draggingGroupName}
-              onDragStart={this.onListDragStart}
-            >
-              {this.state.appointments
-                .filter((x) => x.arranged === false)
-                .map((task, index) => {
-                  task.key = index;
-                  return (
-                    <Draggable
-                      key={index}
-                      className="item dx-card dx-theme-text-color dx-theme-background-color"
-                      clone={true}
-                      group={draggingGroupName}
-                      data={task}
-                      width={200}
-                      onDragStart={this.onItemDragStart}
-                      onDragEnd={this.onItemDragEnd}
-                    >
-                      <div style={{ textAlign: "center" }}>{task.text}</div>
-                    </Draggable>
-                  );
-                })}
-            </Draggable>
-          </ScrollView>
-        </div>
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          position={{ of: "#scheduler-container" }}
-          visible={this.state.loading}
-        />
-      </React.Fragment>
-    );
-  }
-
-  checkIfNoGame(startDate) {
-    const WeekDay = startDate.getDay();
-    if (startDate.getHours() === 1 && (WeekDay === 2 || WeekDay === 4)) {
-      notify(`Games can not be arrange at Tuesday's and Thursday's noon.`);
-      return true;
+  const onAppointmentDragEnd = () => {
+    closeTeamBusy();
+  };
+  const onAppointmentDragStart = (e) => {
+    showTeamBusy(e.itemData);
+  };
+  const onAppointmentRemove = async (e) => {
+    setLoading(true);
+    e.itemData.recorder = null;
+    e.itemData.startDate = null;
+    e.itemData.field = null;
+    const response = await Match.UpdateScheduler(e.itemData);
+    if (response.code !== 200) {
+      message.error(response.message);
+      return;
     }
-    return false;
-  }
-
-  onAppointmentDragEnd = () => {
-    this.closeTeamBusy();
+    setMatches((data) => [...data, e.itemData]);
+    setArranged((data) => [...data].filter((match) => match !== e.itemData));
+    setLoading(false);
   };
-  onAppointmentDragStart = (e) => {
-    this.showTeamBusy(e.itemData.home, e.itemData.away);
+  const getTimeNumber = (match) => {
+    const Hour = match.startDate.getHours();
+    const WeekDay = match.startDate.getDay();
+    return (WeekDay - 1) * 3 + Hour - 1;
   };
-
-  onAppointmentRemove = (e) => {
-    if (e.itemData.arranged === true) {
-      const index = this.state.appointments.indexOf(e.itemData);
-      let newappointments = this.state.appointments;
-      delete newappointments[index].startDate;
-      delete newappointments[index].endDate;
-
-      newappointments[index].recorder_id = null;
-      newappointments[index].recorder = null;
-      newappointments[index].arranged = false;
-      this.setState({
-        appointments: newappointments,
-        currentAppointment: null,
-      });
-      const { id } = e.itemData;
-      (async () => {
-        this.startupload();
-        await Match.Update(id, null, null, null);
-        this.endupload();
-      })();
-    }
-  };
-
-  checkTeams = (home, away, startDate) => {
+  const BothTeamAvaliable = (match) => {
+    const Teams = [];
     if (
-      home in this.state.teamtime &&
-      this.state.teamtime[home].find((x) => startDate.toISOString() === x) !==
-        undefined
+      match.home._id in teamBusyTime &&
+      teamBusyTime[match.home._id].includes(getTimeNumber(match))
     ) {
-      notify(`${home} is not avaliable.`);
-      return false;
-    } else if (
-      away in this.state.teamtime &&
-      this.state.teamtime[away].find((x) => startDate.toISOString() === x) !==
-        undefined
+      Teams.push(match.home.name);
+    }
+    if (
+      match.away._id in teamBusyTime &&
+      teamBusyTime[match.away._id].includes(getTimeNumber(match))
     ) {
-      notify(`${away} is not avaliable.`);
+      Teams.push(match.away.name);
+    }
+    if (Teams.length === 0) return true;
+    message.error(Teams.join(", ") + " 無法出賽");
+    return false;
+  };
+  const MatchIsAvalidable = (match) => {
+    const SameDayMatches = arrangedMatches.filter(
+      (m) =>
+        m._id !== match._id &&
+        m.startDate.getDate() === match.startDate.getDate() &&
+        m.startDate.getFullYear() === match.startDate.getFullYear()
+    );
+    if (
+      SameDayMatches.find(
+        (m) =>
+          [match.home._id, match.away._id].includes(m.home._id) ||
+          [match.home._id, match.away._id].includes(m.away._id)
+      )
+    ) {
+      message.error("單日球隊只可有一場比賽");
       return false;
     }
     return true;
   };
-
-  checkMatches = (id, home, away, startDate, field) => {
-    let checkExist = this.state.appointments.find(
-      (x) =>
-        startDate !== null &&
-        startDate !== undefined &&
-        x.startDate !== null &&
-        x.startDate !== undefined &&
-        new Date(startDate).toISOString() ===
-          new Date(x.startDate).toISOString() &&
-        x.field === field
-    );
-    if (checkExist !== undefined) {
-      return false;
-    }
-    let check = this.state.appointments.filter(
-      // 取得當天所有已排的的比賽
-      (x) =>
-        x.arranged && // 已上排程
-        id !== x.id && // 不是自己
-        startDate.getDate() === x.startDate.getDate() // 同一天
-    );
-    check = check.filter(
-      (x) =>
-        x.home === home ||
-        x.home === away ||
-        x.away === home ||
-        x.away === away || // 在當天有其他比賽
-        (x.startDate === startDate && x.field === field) // 在同一個時段以及場地有比賽
-    );
-    return check.length === 0 ? true : false;
-  };
-
-  onAppointmentAdd = (e) => {
-    if (this.uploading) {
-      e.cancel = true;
-      return;
-    }
-    if (e.itemData === undefined) {
-      e.cancel = true;
-      return;
-    }
-    if (e.itemData.startDate.getHours() === 0) {
-      e.cancel = true;
-      return;
-    }
-
-    if (this.checkIfNoGame(e.itemData.startDate)) {
-      e.cancel = true;
-      return;
-    }
-
-    if (
-      !this.checkTeams(e.fromData.home, e.fromData.away, e.itemData.startDate)
-    ) {
-      e.cancel = true;
-      return;
-    }
-
-    if (
-      !this.checkMatches(
-        e.fromData.id,
-        e.fromData.home,
-        e.fromData.away,
-        e.itemData.startDate,
-        e.itemData.field
-      )
-    ) {
-      e.cancel = true;
-      notify(
-        `${e.fromData.home} or ${e.fromData.away} have game at the same time`
-      );
-      return;
-    }
-
-    if (e.fromData.arranged === false) {
-      const index = this.state.appointments.indexOf(e.fromData);
-      let newappointments = this.state.appointments;
-      e.itemData.endDate = new Date(e.itemData.startDate);
-      e.itemData.endDate.setHours(e.itemData.startDate.getHours() + 1);
-      newappointments[index] = e.itemData;
-      newappointments[index].arranged = true;
-      this.setState({
-        appointments: newappointments,
-      });
-      const { id, startDate, field, recorder_id } = e.itemData;
-      (async () => {
-        this.startupload();
-        await Match.Update(id, startDate, field, recorder_id);
-        this.endupload();
-      })();
-    }
-  };
-
-  onAppointmentUpdating = (e) => {
-    if (this.uploading) {
-      e.cancel = true;
-      return;
-    }
-    if (e.oldData.recorder_id !== e.newData.recorder_id) return;
-    if (e.newData.allDay) e.cancel = true;
-    if (e.newData.startDate.getHours() === 0) {
-      e.cancel = true;
-      return;
-    }
-
-    if (this.checkIfNoGame(e.newData.startDate)) {
-      e.cancel = true;
-      return;
-    }
-
-    if (!this.checkTeams(e.oldData.home, e.oldData.away, e.newData.startDate)) {
-      e.cancel = true;
-      return;
-    }
-
-    if (
-      !this.checkMatches(
-        e.oldData.id,
-        e.oldData.home,
-        e.oldData.away,
-        e.newData.startDate,
-        e.newData.field
-      )
-    ) {
-      e.cancel = true;
-      notify(
-        `${e.oldData.home} or ${e.oldData.away} have game at the same time`
-      );
-      return;
-    }
-    const { id, startDate, field, recorder_id } = e.newData;
-    (async () => {
-      this.startupload();
-      await Match.Update(id, startDate, field, recorder_id);
-      this.endupload();
-    })();
-  };
-
-  onListDragStart(e) {
+  const onAppointmentClick = (e) => {
+    setTarget(e.appointmentData);
+    setOnEdit(true);
     e.cancel = true;
-  }
-
-  onItemDragStart = (e) => {
-    e.itemData = e.fromData;
-    this.showTeamBusy(e.fromData.home, e.fromData.away);
   };
-
-  onItemDragEnd = (e) => {
-    this.closeTeamBusy();
-    if (e.toData) {
+  const onAppointmentAdd = async (e) => {
+    if (!BothTeamAvaliable(e.itemData) || !MatchIsAvalidable(e.itemData)) {
       e.cancel = true;
+      return;
     }
+    const endDate = new Date(e.itemData.startDate);
+    endDate.setHours(endDate.getHours() + 1);
+    e.itemData.endDate = endDate;
+    setLoading(true);
+    const response = await Match.UpdateScheduler(e.itemData);
+    if (response.code !== 200) {
+      message.error(response.message);
+      return;
+    }
+    setMatches((data) => [...data].filter((match) => match !== e.fromData));
+    setArranged((data) => [...data, e.itemData]);
+    setLoading(false);
   };
-
-  onAppointmentFormOpening = (data) => {
-    const { homeDepartment, awayDepartment, startDate, recorder_id } =
-      data.appointmentData;
-    if (!homeDepartment) {
-      data.cancel = true;
+  const onAppointmentUpdating = async (e) => {
+    if (!BothTeamAvaliable(e.newData) || !MatchIsAvalidable(e.newData)) {
+      e.cancel = true;
       return;
     }
-    if (this.checkIfNoGame(startDate)) {
-      data.cancel = true;
+    setLoading(true);
+    const response = await Match.UpdateScheduler(e.newData);
+    if (response.code !== 200) {
+      e.cancel = true;
+      message.error(response.message);
       return;
     }
-    let busyrecorders = [];
-    if (startDate.toISOString() in this.state.busytime) {
-      busyrecorders = this.state.busytime[startDate.toISOString()].recorder;
-    }
-    let options = this.state.recorders.filter((x) => {
-      let output =
-        x.department !== homeDepartment &&
-        x.department !== awayDepartment &&
-        busyrecorders.find((person) => person === x.name) === undefined;
-      return output;
-    });
-
-    if (options.length === 0) {
-      notify("Seem there are no avaliable recorders");
-      data.cancel = true;
-      return;
-    }
-
-    let form = data.form;
-    form.option("items", [
-      {
-        colSpan: 2,
-        label: {
-          text: "Recorder",
-        },
-        editorType: "dxSelectBox",
-        dataField: "recorder_id",
-        value: recorder_id,
-        editorOptions: {
-          items: options,
-          itemTemplate: function (option) {
-            return `${option.name} ${option.department}`;
-          },
-          onValueChanged: (args) => {
-            let target = options.find((x) => x.id === args.value);
-            if (target !== undefined) form.updateData("recorder", target.name);
-          },
-          displayExpr: "name",
-          valueExpr: "id",
-        },
-      },
-    ]);
+    setLoading(false);
   };
-
-  DataCell = (props) => {
-    let cellName = "",
-      text = "";
-    let time = props.data.startDate.toISOString();
+  const onListDragStart = (e) => {
+    e.cancel = true;
+  };
+  const onItemDragStart = (e) => {
+    showTeamBusy(e.fromData);
+    e.itemData = e.fromData;
+  };
+  const onItemDragEnd = () => {
+    closeTeamBusy();
+  };
+  const DataCell = (props) => {
+    const CellClassName = ["time-cell"];
+    let text = "";
+    const Hour = props.data.startDate.getHours();
     const WeekDay = props.data.startDate.getDay();
-    if (
-      props.data.startDate.getHours() === 1 &&
-      (WeekDay === 2 || WeekDay === 4)
-    ) {
-      cellName = "disable-date";
-      text = "No Game";
+    const TimeNumber = (WeekDay - 1) * 3 + Hour - 1;
+    if (Hour === 1 && (WeekDay === 2 || WeekDay === 4)) {
+      CellClassName[0] = "disable-date";
+      text = "無比賽";
     }
+
     return (
-      <div className={cellName} id={`${time}-${props.data.groups.field}`}>
+      <div
+        id={`${TimeNumber}-${props.data.groups.field}`}
+        className={CellClassName}
+      >
         {text}
       </div>
     );
   };
+  useEffect(async () => {
+    if (!user_id) return;
+    let response = await Match.GetALLMatch();
+    if (response.code === 200) {
+      setMatches(
+        response.data
+          .filter((match) => match.startDate === null)
+          .map((match) => {
+            match.text = `${match.home.name} vs ${match.away.name}`;
+            match.startDate = new Date(match.startDate);
+            return match;
+          })
+      );
+      setArranged(
+        response.data
+          .filter((match) => match.startDate !== null)
+          .map((match) => {
+            match.text = `${match.home.name} vs ${match.away.name}`;
+            match.startDate = new Date(match.startDate);
+            match.endDate = new Date(match.startDate);
+            match.endDate.setHours(match.endDate.getHours() + 1);
+            return match;
+          })
+      );
+    }
+    response = await User.GetAccount({ admin: "recorder" });
+    if (response.code === 200) setRecorders(response.data);
+
+    response = await Time.GetALLTeamTime();
+    if (response.code === 200) {
+      setTeamBusyTime(() => {
+        const TimeDictionary = {};
+        response.data.forEach((team) => {
+          TimeDictionary[team.team_id] = team.time;
+        });
+        return TimeDictionary;
+      });
+    }
+    setLoading(false);
+  }, [user_id]);
+
+  return (
+    <React.Fragment>
+      <div
+        id="scheduler-container"
+        style={{ display: "flex", flexDirection: "column" }}
+      >
+        <Scheduler
+          ref={scheduler}
+          adaptivityEnabled={true}
+          timeZone="Asia/Taipei"
+          id="scheduler"
+          dataSource={arrangedMatches}
+          defaultCurrentDate={new Date(2021, 1, 1)}
+          height={"100%"}
+          startDayHour={1}
+          endDayHour={4}
+          cellDuration={60}
+          editing={{
+            allowAdding: true,
+            allowDeleting: true,
+            allowResizing: false,
+            allowDragging: true,
+            allowUpdating: true,
+          }}
+          groupByDate={true}
+          groups={["field"]}
+          views={views}
+          dataCellComponent={DataCell}
+          defaultCurrentView={views[0]}
+          appointmentComponent={AppointmentFormat}
+          appointmentTooltipComponent={null}
+          onAppointmentClick={onAppointmentClick}
+          onAppointmentUpdating={onAppointmentUpdating}
+          onAppointmentAdded={onAppointmentAdd}
+          onAppointmentFormOpening={(e) => {
+            e.cancel = true;
+          }}
+          timeCellRender={TimeCell}
+        >
+          <Resource
+            fieldExpr="field"
+            allowMultiple={false}
+            dataSource={FieldData}
+            label="Field"
+          />
+          <View
+            type="timelineWeek"
+            name="Timeline Week"
+            groupOrientation="horizontal"
+            maxAppointmentsPerCell={1}
+          />
+          <AppointmentDragging
+            group={draggingGroupName}
+            onRemove={onAppointmentRemove}
+            onAdd={onAppointmentAdd}
+            onDragEnd={onAppointmentDragEnd}
+            onDragStart={onAppointmentDragStart}
+          />
+        </Scheduler>
+        <h1 style={{ marginLeft: 50 }}>賽程</h1>
+        <ScrollView
+          id="scroll"
+          direction="both"
+          height={100}
+          width={"100%"}
+          bounceEnabled={true}
+          showScrollbar="always"
+          useNative={false}
+        >
+          <Draggable
+            id="DragList"
+            data="dropArea"
+            height={100}
+            group={draggingGroupName}
+            onDragStart={onListDragStart}
+          >
+            {matches.map((task, index) => {
+              task.key = index;
+              return (
+                <Draggable
+                  key={index}
+                  className="item dx-card dx-theme-text-color dx-theme-background-color"
+                  clone={true}
+                  group={draggingGroupName}
+                  data={task}
+                  width={200}
+                  onDragStart={onItemDragStart}
+                  onDragEnd={onItemDragEnd}
+                >
+                  <div style={{ textAlign: "center" }}>{task.text}</div>
+                </Draggable>
+              );
+            })}
+          </Draggable>
+        </ScrollView>
+      </div>
+      <LoadPanel
+        shadingColor="rgba(0,0,0,0.4)"
+        position={{ of: "#scheduler-container" }}
+        visible={loading}
+      />
+      <AppointmentForm
+        visable={onEditAppointment}
+        setVisable={setOnEdit}
+        target={target}
+        setAppointments={setArranged}
+        recorders={recorders}
+      />
+    </React.Fragment>
+  );
 }
 
-export default App;
+function AppointmentForm({
+  target,
+  visable,
+  setVisable,
+  setAppointments,
+  recorders,
+}) {
+  const time = ["12:30-13:30", "18:30-19:30", "19:30-20:30"];
+  let data = {
+    _id: "none",
+    startDate: new Date(),
+    text: "錯誤比賽",
+    home: {},
+    away: {},
+    field: 0,
+  };
+  if (target) data = target;
+  const fieldPicture = {
+    0: "https://i.imgur.com/uR9JIRI.png",
+    1: "https://i.imgur.com/C378EBB.png",
+  };
+  const onRecorderChanged = (value) => {
+    setAppointments((data) =>
+      data.map((match) => {
+        if (match._id === _id) match.recorder = value;
+        return match;
+      })
+    );
+  };
+  const { _id, home, away, text, startDate, field, recorder } = data;
+  const columns = [
+    { title: "學系", dataIndex: "department" },
+    { title: "報名狀態", dataIndex: "status" },
+    { title: "預賽編號", dataIndex: "session_preGame" },
+  ];
+  return (
+    <Modal
+      visible={visable}
+      footer={[<Button onClick={() => setVisable(false)}>返回</Button>]}
+      onCancel={() => setVisable(false)}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Image
+          width={200}
+          height={200}
+          src={fieldPicture[field]}
+          preview={false}
+        />
+
+        <h3>{`比賽日期: ${startDate.toLocaleDateString()} ${
+          time[startDate.getHours() - 1]
+        }`}</h3>
+        <h3>{`${text} ${field === 0 ? "中央場 A" : "中央場 B"}`}</h3>
+        <Table columns={columns} dataSource={[home, away]} pagination={false} />
+        <Form>
+          <Form.Item label="紀錄員">
+            <Select
+              placeholder="尚未指派紀錄員"
+              onChange={onRecorderChanged}
+              value={recorder}
+            >
+              {recorders.map((user) => (
+                <Option value={user._id}>
+                  {`${user.account} (${user.department})`}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </div>
+    </Modal>
+  );
+}

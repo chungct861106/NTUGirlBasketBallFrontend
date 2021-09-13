@@ -70,9 +70,9 @@ export default function News() {
 
   useMemo(async () => {
     const imageResult = await Post.GetTypeContent("news_image");
-    setImages(() => imageResult);
+    // setImages(() => imageResult);
     const newsResult = await Post.GetTypeContent("news");
-    setNews(() => newsResult);
+    // setNews(() => newsResult);
   }, [userInfo]);
 
   console.log("return result: ", images, news);

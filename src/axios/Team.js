@@ -49,9 +49,6 @@ export const GetTeamObject = (serverURL) => {
     },
 
     GetTeamByID: async (id) => {
-      // [Must] id       User ID
-      // [Must] token    {adim:adimister}
-
       try {
         let response = await axios({
           method: "GET",
@@ -71,12 +68,12 @@ export const GetTeamObject = (serverURL) => {
       try {
         let response = await axios({
           method: "GET",
-          url: serverURL + "teams/getALL",
+          url: serverURL + "teams/data",
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Team][GetALL]` + err;
+        return err.response.data;
       }
     },
     GetTeamIDbyUser: async (user_id) => {
