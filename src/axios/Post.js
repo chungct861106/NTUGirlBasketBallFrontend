@@ -2,12 +2,24 @@ import axios from "axios";
 import { token } from "../axios";
 export const GetPostObject = (serverURL) => {
   return {
-    Create: async (type, title_category, title_content, content) => {
+    Create: async (
+      type = null,
+      title_catagory = null,
+      title_content = null,
+      content = null
+    ) => {
+      console.log(
+        "in axios, create: ",
+        type,
+        title_catagory,
+        title_content,
+        content
+      );
       try {
         let response = await axios({
           method: "POST",
           url: serverURL + "posts/create",
-          data: { type, title_category, title_content, content },
+          data: { type, title_catagory, title_content, content },
           headers: { Authorization: token },
         });
         return response.data;
@@ -64,7 +76,6 @@ export const GetPostObject = (serverURL) => {
             title_catagory,
           },
         });
-        console.log("in axios, posts.getData", response.data.data);
         return response.data.data;
       } catch (err) {
         return err.response.data.message;
