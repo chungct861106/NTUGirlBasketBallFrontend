@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Scheduler, { Resource, View } from "devextreme-react/scheduler";
-
+import { usePages } from "../hooks/usePages";
 import notify from "devextreme/ui/notify";
 import AppointmentFormat from "../components/Appointment";
 import AppointmentTooltip from "../components/AppointmentTooltip";
@@ -32,6 +32,34 @@ const TimeCell = ({ date }) => {
   return <div style={{ margin: "0 auto" }}>{text}</div>;
 };
 
+export default function MyScheduler(props) {
+  const [loading, setLoading] = useState(true);
+  const [matches, setMatches] = useState([]);
+  const [teamBusyTime, setTeamBusyTime] = useState({});
+  const [recorders, setRecorders] = useState({});
+  const [recorderBusyTime, setRecorderBusyTime] = useState({});
+  const [gameType, setGameType] = useState("preGame");
+  const scheduler = useRef();
+  const { userInfo } = usePages();
+  const { user_id } = usePages();
+  const startupload = () => {
+    setLoading(true);
+    notify("Uploading");
+  };
+  const endupload = () => {
+    setLoading(false);
+    notify("Uploaded");
+  };
+  useEffect(async () => {
+    console.log(userInfo);
+    if (!user_id) return;
+    let allmatches = (await Match.GetALLMatch()).filter(
+      (x) => x.stage === "preGame"
+    );
+  }, []);
+
+  return <div>scheduler</div>;
+}
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -154,4 +182,4 @@ class App extends React.Component {
   };
 }
 
-export default App;
+// export default App;
