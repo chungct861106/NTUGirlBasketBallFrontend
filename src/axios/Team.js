@@ -16,21 +16,17 @@ export const GetTeamObject = (serverURL) => {
       }
     },
 
-    Status: async (id, status) => {
-      // [Must] id       User ID
-      // [Must] status   ['已報名', '已繳費', '審核中', '未報名', '未繳費']
-      // [Myst] token    {adim:adimister}
-
+    Status: async (team_id, status) => {
       try {
         let response = await axios({
           method: "POST",
           url: serverURL + "teams/status",
-          data: { id, status },
+          data: { team_id, status },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Team][SetStatus]` + err;
+        return err.response.data;
       }
     },
 
@@ -63,8 +59,6 @@ export const GetTeamObject = (serverURL) => {
     },
 
     GetALLTeam: async () => {
-      // [Must] token    {adim:adimister}
-
       try {
         let response = await axios({
           method: "GET",

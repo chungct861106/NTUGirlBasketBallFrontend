@@ -1,17 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
-import Scheduler, { Resource, View } from "devextreme-react/scheduler";
-import { usePages } from "../hooks/usePages";
-import notify from "devextreme/ui/notify";
+import { message, Modal, Image, Table, Select, Button, Form } from "antd";
+import Scheduler, {
+  AppointmentDragging,
+  Resource,
+  View,
+} from "devextreme-react/scheduler";
+import Draggable from "devextreme-react/draggable";
+import ScrollView from "devextreme-react/scroll-view";
 import AppointmentFormat from "../components/Appointment";
-import AppointmentTooltip from "../components/AppointmentTooltip";
 import "devextreme/dist/css/dx.common.css";
 import "devextreme/dist/css/dx.light.css";
 import "../css/scheduler.css";
-import { Match } from "../axios";
+import { Match, Time, User } from "../axios";
 import { LoadPanel } from "devextreme-react/load-panel";
-const currentDate = new Date(2021, 4, 24);
-const views = ["workWeek"];
+import { usePages } from "../hooks/usePages";
 
+const { Option } = Select;
+
+const views = ["workWeek"];
+const draggingGroupName = "appointmentsGroup";
 const TimeRangeObject = { 1: "12:30", 2: "18:30", 3: "19:30" };
 
 const FieldData = [
@@ -32,154 +39,214 @@ const TimeCell = ({ date }) => {
   return <div style={{ margin: "0 auto" }}>{text}</div>;
 };
 
-export default function MyScheduler(props) {
+const testData = [];
+
+export default function MyScheduler() {
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState([]);
+  const [arrangedMatches, setArranged] = useState(testData);
   const [teamBusyTime, setTeamBusyTime] = useState({});
-  const [recorders, setRecorders] = useState({});
+  const [AllBusyTime, setbusytime] = useState({});
+  const [recorders, setRecorders] = useState([]);
   const [recorderBusyTime, setRecorderBusyTime] = useState({});
   const [gameType, setGameType] = useState("preGame");
+  const [onEditAppointment, setOnEdit] = useState(false);
+  const [target, setTarget] = useState(null);
   const scheduler = useRef();
   const { userInfo } = usePages();
-  const { user_id } = usePages();
-  const startupload = () => {
-    setLoading(true);
-    notify("Uploading");
-  };
-  const endupload = () => {
-    setLoading(false);
-    notify("Uploaded");
-  };
-  useEffect(async () => {
-    console.log(userInfo);
-    if (!user_id) return;
-    let allmatches = (await Match.GetALLMatch()).filter(
-      (x) => x.stage === "preGame"
-    );
-  }, []);
+  const { user_id } = userInfo;
 
-  return <div>scheduler</div>;
-}
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.uploading = false;
-    this.state = {
-      appointments: [],
-      busytime: {},
-      recorders: {},
-      teams: {},
-      currentAppointment: null,
-      loading: true,
-    };
-    this.scheduler = React.createRef();
-  }
-  startupload = () => {
-    this.setState(() => ({ loading: true }));
-    notify("Uploading");
-  };
-  endupload = () => {
-    this.setState(() => ({ loading: false }));
-    notify("Uploaded");
-  };
-  componentWillUnmount = () => {};
-
-  componentDidMount = () => {
-    (async () => {
-      let allmatches = await Match.GetALLMatch();
-      allmatches.forEach((match, index) => {
-        match.text = `${match.home} vs ${match.away}`;
-        match.startDate = new Date(match.startDate);
-      });
-      this.setState(() => ({
-        appointments: allmatches,
-        loading: false,
-      }));
-    })();
-  };
-  onAppointmentFormOpening = (e) => {
+  const onAppointmentClick = (e) => {
+    setTarget(e.appointmentData);
+    setOnEdit(true);
     e.cancel = true;
-    return;
   };
-  render() {
-    const { appointments } = this.state;
-    return (
-      <React.Fragment>
-        <div
-          id="scheduler-container"
-          style={{ display: "flex", flexDirection: "column" }}
-        >
-          <Scheduler
-            ref={this.scheduler}
-            adaptivityEnabled={true}
-            timeZone="Asia/Taipei"
-            id="scheduler"
-            dataSource={appointments.filter((x) => x.arranged === true)}
-            defaultCurrentDate={currentDate}
-            height={"100%"}
-            startDayHour={1}
-            endDayHour={4}
-            cellDuration={60}
-            editing={{
-              allowAdding: false,
-              allowDeleting: false,
-              allowResizing: false,
-              allowDragging: false,
-              allowUpdating: false,
-            }}
-            groupByDate={true}
-            groups={["field"]}
-            views={views}
-            dataCellComponent={this.DataCell}
-            defaultCurrentView={views[0]}
-            appointmentComponent={AppointmentFormat}
-            appointmentTooltipComponent={AppointmentTooltip}
-            onAppointmentFormOpening={this.onAppointmentFormOpening}
-            onAppointmentUpdating={this.onAppointmentUpdating}
-            onAppointmentAdded={this.onAppointmentAdd}
-            timeCellRender={TimeCell}
-          >
-            <Resource
-              fieldExpr="field"
-              allowMultiple={false}
-              dataSource={FieldData}
-              label="Field"
-            />
-            <View
-              type="timelineWeek"
-              name="Timeline Week"
-              groupOrientation="horizontal"
-              maxAppointmentsPerCell={1}
-            />
-          </Scheduler>
-        </div>
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          position={{ of: "#scheduler-container" }}
-          visible={this.state.loading}
-        />
-      </React.Fragment>
-    );
-  }
 
-  DataCell = (props) => {
-    let cellName = "",
-      text = "";
-    let time = props.data.startDate.toISOString();
+  const DataCell = (props) => {
+    const CellClassName = ["time-cell"];
+    let text = "";
+    const Hour = props.data.startDate.getHours();
     const WeekDay = props.data.startDate.getDay();
-    if (
-      props.data.startDate.getHours() === 1 &&
-      (WeekDay === 2 || WeekDay === 4)
-    ) {
-      cellName = "disable-date";
-      text = "No Game";
+    const TimeNumber = (WeekDay - 1) * 3 + Hour - 1;
+    if (Hour === 1 && (WeekDay === 2 || WeekDay === 4)) {
+      CellClassName[0] = "disable-date";
+      text = "無比賽";
     }
+
     return (
-      <div className={cellName} id={`${time}-${props.data.groups.field}`}>
+      <div
+        id={`${TimeNumber}-${props.data.groups.field}`}
+        className={CellClassName}
+      >
         {text}
       </div>
     );
   };
+  useEffect(async () => {
+    let response = await Match.GetALLMatch();
+    if (response.code === 200) {
+      setArranged(
+        response.data
+          .filter((match) => match.startDate !== null)
+          .map((match) => {
+            match.text = `${match.home.name} vs ${match.away.name}`;
+            match.startDate = new Date(match.startDate);
+            match.endDate = new Date(match.startDate);
+            match.endDate.setHours(match.endDate.getHours() + 1);
+            return match;
+          })
+      );
+    }
+    response = await User.GetAccount({ admin: "recorder" });
+    if (response.code === 200) setRecorders(response.data);
+    setLoading(false);
+  }, [user_id]);
+
+  return (
+    <React.Fragment>
+      <div
+        id="scheduler-container"
+        style={{ display: "flex", flexDirection: "column" }}
+      >
+        <Scheduler
+          ref={scheduler}
+          adaptivityEnabled={true}
+          timeZone="Asia/Taipei"
+          id="scheduler"
+          dataSource={arrangedMatches}
+          defaultCurrentDate={new Date(2021, 1, 1)}
+          height={"100%"}
+          startDayHour={1}
+          endDayHour={4}
+          cellDuration={60}
+          editing={{
+            allowAdding: false,
+            allowDeleting: false,
+            allowResizing: false,
+            allowDragging: false,
+            allowUpdating: false,
+          }}
+          groupByDate={true}
+          groups={["field"]}
+          views={views}
+          dataCellComponent={DataCell}
+          defaultCurrentView={views[0]}
+          appointmentComponent={AppointmentFormat}
+          appointmentTooltipComponent={null}
+          onAppointmentClick={onAppointmentClick}
+          onAppointmentFormOpening={(e) => {
+            e.cancel = true;
+          }}
+          timeCellRender={TimeCell}
+        >
+          <Resource
+            fieldExpr="field"
+            allowMultiple={false}
+            dataSource={FieldData}
+            label="Field"
+          />
+          <View
+            type="timelineWeek"
+            name="Timeline Week"
+            groupOrientation="horizontal"
+            maxAppointmentsPerCell={1}
+          />
+        </Scheduler>
+      </div>
+      <LoadPanel
+        shadingColor="rgba(0,0,0,0.4)"
+        position={{ of: "#scheduler-container" }}
+        visible={loading}
+      />
+      <AppointmentForm
+        visable={onEditAppointment}
+        setVisable={setOnEdit}
+        target={target}
+        setAppointments={setArranged}
+        recorders={recorders}
+      />
+    </React.Fragment>
+  );
 }
 
-// export default App;
+function AppointmentForm({
+  target,
+  visable,
+  setVisable,
+  setAppointments,
+  recorders,
+}) {
+  const time = ["12:30-13:30", "18:30-19:30", "19:30-20:30"];
+  let data = {
+    _id: "none",
+    startDate: new Date(),
+    text: "錯誤比賽",
+    home: {},
+    away: {},
+    field: 0,
+  };
+  if (target) data = target;
+  const fieldPicture = {
+    0: "https://i.imgur.com/uR9JIRI.png",
+    1: "https://i.imgur.com/C378EBB.png",
+  };
+  const onRecorderChanged = (value) => {
+    setAppointments((data) =>
+      data.map((match) => {
+        if (match._id === _id) match.recorder = value;
+        return match;
+      })
+    );
+  };
+  const { _id, home, away, text, startDate, field, recorder } = data;
+  const columns = [
+    { title: "學系", dataIndex: "department" },
+    { title: "報名狀態", dataIndex: "status" },
+    { title: "預賽編號", dataIndex: "session_preGame" },
+  ];
+  return (
+    <Modal
+      visible={visable}
+      footer={[<Button onClick={() => setVisable(false)}>返回</Button>]}
+      onCancel={() => setVisable(false)}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Image
+          width={200}
+          height={200}
+          src={fieldPicture[field]}
+          preview={false}
+        />
+
+        <h3>{`比賽日期: ${startDate.toLocaleDateString()} ${
+          time[startDate.getHours() - 1]
+        }`}</h3>
+        <h3>{`${text} ${field === 0 ? "中央場 A" : "中央場 B"}`}</h3>
+        <Table columns={columns} dataSource={[home, away]} pagination={false} />
+        <Form>
+          <Form.Item label="紀錄員">
+            <Select
+              placeholder="尚未指派紀錄員"
+              onChange={onRecorderChanged}
+              value={recorder}
+              disabled={true}
+            >
+              {recorders.map((user) => (
+                <Option value={user._id}>
+                  {`${user.account} (${user.department})`}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </div>
+    </Modal>
+  );
+}
