@@ -15,31 +15,100 @@ export const GetPostObject = (serverURL) => {
         return err;
       }
     },
-    GetTypeContent: async (type) => {
+    Update: async (
+      post_id = null,
+      title_content = null,
+      content = null,
+      active = null,
+      type = null,
+      title_catagory = null
+    ) => {
+      try {
+        let response = await axios({
+          method: "POST",
+          url: serverURL + "posts/update",
+          data: {
+            post_id,
+            title_content,
+            content,
+            active,
+            type,
+            title_catagory,
+          },
+          headers: { Authorization: token },
+        });
+        return response.data;
+      } catch (err) {
+        return err.response.message;
+      }
+    },
+    GetData: async ({
+      post_id = null,
+      title_content = null,
+      content = null,
+      active = null,
+      type = null,
+      title_catagory = null,
+    }) => {
+      console.log("in axios, post.getData:", post_id, type);
       try {
         let response = await axios({
           method: "GET",
           url: serverURL + "posts/getType",
-          params: { type },
-          // headers: { Authorization: token }
+          headers: { Authorization: token },
+          params: {
+            post_id,
+            title_content,
+            content,
+            active,
+            type,
+            title_catagory,
+          },
         });
-        return response.data;
+        console.log("in axios, posts.getData", response.data.data);
+        return response.data.data;
       } catch (err) {
-        return `[Error][Post][GetTypeContent]`;
+        return err.response.data.message;
       }
     },
-    DeletePost: async (post_id) => {
+    Delete: async (post_id) => {
       try {
         let response = await axios({
           method: "DELETE",
-          url: serverURL + "posts/deletePost",
+          url: serverURL + "posts/delete",
           data: { post_id },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        throw err;
+        return err.response.message;
       }
     },
+    // GetTypeContent: async (type) => {
+    //   try {
+    //     let response = await axios({
+    //       method: "GET",
+    //       url: serverURL + "posts/getType",
+    //       params: { type },
+    //       // headers: { Authorization: token }
+    //     });
+    //     return response.data;
+    //   } catch (err) {
+    //     return `[Error][Post][GetTypeContent]`;
+    //   }
+    // },
+    // DeletePost: async (post_id) => {
+    //   try {
+    //     let response = await axios({
+    //       method: "DELETE",
+    //       url: serverURL + "posts/deletePost",
+    //       data: { post_id },
+    //       headers: { Authorization: token },
+    //     });
+    //     return response.data;
+    //   } catch (err) {
+    //     throw err;
+    //   }
+    // },
   };
 };

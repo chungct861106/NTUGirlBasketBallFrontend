@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Carousel, Image, Button, Divider, Modal } from "antd";
 import { Post } from "../axios";
@@ -68,12 +68,16 @@ export default function News() {
     // Post.DeletePost(post_id)
   };
 
-  useMemo(async () => {
-    const imageResult = await Post.GetTypeContent("news_image");
+  useEffect(async () => {
+    let type = "news_image";
+    const imageResult = await Post.GetData({ type });
     setImages(() => imageResult);
-    const newsResult = await Post.GetTypeContent("news");
+    type = "news";
+    const newsResult = await Post.GetData({ type });
     setNews(() => newsResult);
   }, [userInfo]);
+
+  console.log("in news: ", images, news, edit, showModel);
 
   return (
     <React.Fragment>
@@ -92,6 +96,7 @@ export default function News() {
           )}
           <Carousel autoplay={true}>
             {images.map((image, index) => {
+              console.log("in map, image: ", image);
               return (
                 <ContentStyled key={index}>
                   {edit && (
@@ -115,7 +120,7 @@ export default function News() {
           <List
             titleName={"News"}
             dataSource={news}
-            catagoryColName={"title_category"}
+            type={"type"}
             contentColName={"title_content"}
             urlColName={"content"}
             edit={edit}
