@@ -50,7 +50,6 @@ export const GetPostObject = (serverURL) => {
       type = null,
       title_catagory = null,
     }) => {
-      console.log("in axios, post.getData:", post_id, type);
       try {
         let response = await axios({
           method: "GET",
@@ -79,11 +78,12 @@ export const GetPostObject = (serverURL) => {
           data: { post_id },
           headers: { Authorization: token },
         });
-        return response.data;
+        return response.data.data;
       } catch (err) {
         return err.response.message;
       }
     },
+
     // GetTypeContent: async (type) => {
     //   try {
     //     let response = await axios({

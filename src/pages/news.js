@@ -54,27 +54,33 @@ export default function News() {
   const [showModel, setShowModel] = useState(false);
 
   const generateModal = (post_id) => {
-    console.log("in generate modal");
     Modal.confirm({
       title: "test title",
       content: <p>test content</p>,
-      onOK: deletePostId,
+      onOK: deletePostId(post_id),
     });
   };
 
-  const deletePostId = () => {
-    console.log("in handle edit");
-
-    // Post.DeletePost(post_id)
+  const deletePostId = async (post_id) => {
+    try {
+      const res = await Post.Delete(post_id);
+    } catch (err) {
+      console.log("in deletePostId fail: ", err);
+    }
+    updateData();
   };
 
-  useEffect(async () => {
+  const updateData = async () => {
     let type = "news_image";
     const imageResult = await Post.GetData({ type });
     setImages(() => imageResult);
     type = "news";
     const newsResult = await Post.GetData({ type });
     setNews(() => newsResult);
+  };
+
+  useEffect(async () => {
+    updateData();
   }, [userInfo]);
 
   return (
@@ -94,14 +100,13 @@ export default function News() {
           )}
           <Carousel autoplay={true}>
             {images.map((image, index) => {
-              console.log("in map, image: ", image);
               return (
                 <ContentStyled key={index}>
                   {edit && (
                     <EditButton
                       onClick={() => {
                         setEdit(true);
-                        generateModal(image.post_id);
+                        generateModal(image._id);
                       }}
                     >
                       刪除

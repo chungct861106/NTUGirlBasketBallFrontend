@@ -53,7 +53,7 @@ const List_component = ({
                 </StyledA>
               </div>
               {edit && (
-                <StyledButton onClick={() => generateModal(anews["post_id"])}>
+                <StyledButton onClick={() => generateModal(anews["_id"])}>
                   刪除
                 </StyledButton>
               )}
