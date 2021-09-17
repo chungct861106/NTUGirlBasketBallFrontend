@@ -98,7 +98,6 @@ export default function CheckTeams() {
             onChange={async (value) => {
               const { _id } = teamInfo;
               const response = await Team.Status(_id, value);
-                setData((data) =>
               if (response.code === 200) message.success("Success");
             }}
           >
