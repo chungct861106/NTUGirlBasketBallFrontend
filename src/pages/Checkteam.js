@@ -94,17 +94,12 @@ export default function CheckTeams() {
       render: (teamInfo) => {
         return (
           <Select
-            value={teamInfo.status}
+            defaultValue={teamInfo.status}
             onChange={async (value) => {
               const { _id } = teamInfo;
               const response = await Team.Status(_id, value);
-              if (response.code === 200)
                 setData((data) =>
-                  [...data].map((team) => {
-                    if (team._id === _id) return response.data;
-                    return team;
-                  })
-                );
+              if (response.code === 200) message.success("Success");
             }}
           >
             {statusOption.map(({ text, value }) => (
@@ -504,7 +499,6 @@ function PlayersTable({ teamID, editable }) {
     setPreviewVisible(true);
   };
   const onUploadFile = async (options) => {
-    console.log(options);
     const { onSuccess, onError, file, onProgress } = options;
     onProgress("上傳中");
     const response = await GenerateImageURL(file);
