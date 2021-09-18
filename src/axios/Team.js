@@ -16,14 +16,14 @@ export const GetTeamObject = (serverURL) => {
       }
     },
 
-    Update: async (
-      team_id = null,
-      session_preGame = null,
-      session_interGame = null,
-      name = null,
-      department = null,
-      user_id = null
-    ) => {
+    Update: async ({
+      team_id,
+      session_preGame,
+      session_interGame,
+      name,
+      department,
+      user_id,
+    }) => {
       try {
         let response = await axios({
           method: "POST",
@@ -43,19 +43,13 @@ export const GetTeamObject = (serverURL) => {
         return err.response.message;
       }
     },
-    Assign: async (
-      team_id,
-      session_preGame = null,
-      session_interGame = null
-    ) => {
+    Assign: async (TeamObj) => {
       try {
         let response = await axios({
           method: "POST",
           url: serverURL + "teams/assign",
           data: {
-            team_id,
-            session_preGame,
-            session_interGame,
+            TeamObj,
           },
           headers: {
             Authorization: token,
@@ -81,14 +75,14 @@ export const GetTeamObject = (serverURL) => {
       }
     },
 
-    GetTeam: async (
-      team_id = null,
-      session_preGame = null,
-      session_interGame = null,
-      name = null,
-      department = null,
-      user_id = null
-    ) => {
+    GetTeam: async ({
+      team_id,
+      session_preGame,
+      session_interGame,
+      name,
+      department,
+      user_id,
+    }) => {
       try {
         let response = await axios({
           method: "GET",
@@ -103,26 +97,6 @@ export const GetTeamObject = (serverURL) => {
           },
           headers: { Authorization: token },
         });
-        return response.data.data;
-      } catch (err) {
-        return err.response.data.message;
-      }
-    },
-
-    CheckFillSession: async (sessionType) => {
-      try {
-        let response = await axios({
-          method: "GET",
-          url: serverURL + "teams/data",
-          headers: { Authorization: token },
-        });
-
-        if (sessionType === "session_preGame") {
-          console.log(
-            "in axios team, check session_preGame, ",
-            response.data.data
-          );
-        }
         return response.data.data;
       } catch (err) {
         return err.response.data.message;
