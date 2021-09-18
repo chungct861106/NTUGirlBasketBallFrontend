@@ -29,12 +29,11 @@ export const GetTimeObject = (serverURL) => {
         return err.response.data;
       }
     },
-    GetALLTeamTime: async () => {
+    GetALLTime: async () => {
       try {
         let response = await axios({
           method: "GET",
           url: serverURL + "time/data",
-          params: { type: "team" },
           headers: { Authorization: token },
         });
         return response.data;
@@ -47,13 +46,26 @@ export const GetTimeObject = (serverURL) => {
       try {
         let response = await axios({
           method: "GET",
-          url: serverURL + "/time/recorder",
+          url: serverURL + "time/recorder",
           params: { user_id },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][Time][GetAllTime]` + err;
+        return err.response.data;
+      }
+    },
+    RecorderAppointment: async (userID, timeNumber) => {
+      try {
+        let response = await axios({
+          method: "PUT",
+          url: serverURL + "time/recorder/appoint",
+          data: { userID, timeNumber },
+          headers: { Authorization: token },
+        });
+        return response.data;
+      } catch (err) {
+        return err.response.data;
       }
     },
   };

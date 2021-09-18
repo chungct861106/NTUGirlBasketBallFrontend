@@ -11,7 +11,7 @@ import AppointmentFormat from "../components/Appointment";
 import "devextreme/dist/css/dx.common.css";
 import "devextreme/dist/css/dx.light.css";
 import "../css/scheduler.css";
-import { Match, Time, User } from "../axios";
+import { Match, Team, Time, User } from "../axios";
 import { LoadPanel } from "devextreme-react/load-panel";
 import { usePages } from "../hooks/usePages";
 
@@ -46,10 +46,8 @@ export default function MyScheduler() {
   const [matches, setMatches] = useState([]);
   const [arrangedMatches, setArranged] = useState(testData);
   const [teamBusyTime, setTeamBusyTime] = useState({});
-  const [AllBusyTime, setbusytime] = useState({});
   const [recorders, setRecorders] = useState([]);
   const [recorderBusyTime, setRecorderBusyTime] = useState({});
-  const [gameType, setGameType] = useState("preGame");
   const [onEditAppointment, setOnEdit] = useState(false);
   const [target, setTarget] = useState(null);
   const scheduler = useRef();
@@ -171,6 +169,7 @@ export default function MyScheduler() {
       e.cancel = true;
       return;
     }
+    e.newData.recorder = null;
     setLoading(true);
     const response = await Match.UpdateScheduler(e.newData);
     if (response.code !== 200) {
@@ -238,15 +237,10 @@ export default function MyScheduler() {
     response = await User.GetAccount({ admin: "recorder" });
     if (response.code === 200) setRecorders(response.data);
 
-    response = await Time.GetALLTeamTime();
+    response = await Time.GetALLTime();
     if (response.code === 200) {
-      setTeamBusyTime(() => {
-        const TimeDictionary = {};
-        response.data.forEach((team) => {
-          TimeDictionary[team.team_id] = team.time;
-        });
-        return TimeDictionary;
-      });
+      setTeamBusyTime(response.data.team);
+      setRecorderBusyTime(response.data.recorder);
     }
     setLoading(false);
   }, [user_id]);
@@ -340,7 +334,15 @@ export default function MyScheduler() {
                   onDragStart={onItemDragStart}
                   onDragEnd={onItemDragEnd}
                 >
-                  <div style={{ textAlign: "center" }}>{task.text}</div>
+                  <div
+                    style={{ textAlign: "center" }}
+                    onDoubleClick={() => {
+                      setTarget(task);
+                      setOnEdit(true);
+                    }}
+                  >
+                    {task.text}
+                  </div>
                 </Draggable>
               );
             })}
@@ -358,6 +360,7 @@ export default function MyScheduler() {
         target={target}
         setAppointments={setArranged}
         recorders={recorders}
+        recorderBusyTime={recorderBusyTime}
       />
     </React.Fragment>
   );
@@ -369,6 +372,7 @@ function AppointmentForm({
   setVisable,
   setAppointments,
   recorders,
+  recorderBusyTime,
 }) {
   const time = ["12:30-13:30", "18:30-19:30", "19:30-20:30"];
   let data = {
@@ -380,17 +384,25 @@ function AppointmentForm({
     field: 0,
   };
   if (target) data = target;
+  const Hour = data.startDate.getHours();
+  const WeekDay = data.startDate.getDay();
+  const TimeNumber = (WeekDay - 1) * 3 + Hour - 1;
   const fieldPicture = {
     0: "https://i.imgur.com/uR9JIRI.png",
     1: "https://i.imgur.com/C378EBB.png",
   };
-  const onRecorderChanged = (value) => {
-    setAppointments((data) =>
-      data.map((match) => {
-        if (match._id === _id) match.recorder = value;
-        return match;
-      })
-    );
+  const onRecorderChanged = async (value) => {
+    const response = await Match.UpdateScheduler({
+      _id: target._id,
+      recorder: value,
+    });
+    if (response.code === 200)
+      setAppointments((data) =>
+        data.map((match) => {
+          if (match._id === _id) match.recorder = value;
+          return match;
+        })
+      );
   };
   const { _id, home, away, text, startDate, field, recorder } = data;
   const columns = [
@@ -400,6 +412,7 @@ function AppointmentForm({
   ];
   return (
     <Modal
+      title={"賽事資訊"}
       visible={visable}
       footer={[<Button onClick={() => setVisable(false)}>返回</Button>]}
       onCancel={() => setVisable(false)}
@@ -413,29 +426,39 @@ function AppointmentForm({
         }}
       >
         <Image
+          hidden={field === null}
           width={200}
           height={200}
           src={fieldPicture[field]}
           preview={false}
         />
 
-        <h3>{`比賽日期: ${startDate.toLocaleDateString()} ${
-          time[startDate.getHours() - 1]
-        }`}</h3>
+        <h3>{`比賽日期: ${
+          field !== null ? startDate.toLocaleDateString() : "尚未安排"
+        } ${field !== null ? time[startDate.getHours() - 1] : ""}`}</h3>
         <h3>{`${text} ${field === 0 ? "中央場 A" : "中央場 B"}`}</h3>
         <Table columns={columns} dataSource={[home, away]} pagination={false} />
         <Form>
           <Form.Item label="紀錄員">
             <Select
-              placeholder="尚未指派紀錄員"
+              placeholder={field !== null ? "尚未指派紀錄員" : "請先選擇時段"}
               onChange={onRecorderChanged}
+              disabled={field === null}
               value={recorder}
             >
-              {recorders.map((user) => (
-                <Option value={user._id}>
-                  {`${user.account} (${user.department})`}
-                </Option>
-              ))}
+              {recorders
+                .filter(
+                  (user) =>
+                    !(
+                      user._id in recorderBusyTime &&
+                      recorderBusyTime[user._id].includes(TimeNumber)
+                    )
+                )
+                .map((user) => (
+                  <Option value={user._id}>
+                    {`${user.account} (${user.department})`}
+                  </Option>
+                ))}
             </Select>
           </Form.Item>
         </Form>

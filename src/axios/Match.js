@@ -1,8 +1,5 @@
 import axios from "axios";
 import { token } from "../axios";
-function DateConverter(date) {
-  return date !== null ? new Date(date).toISOString() : null;
-}
 
 export const GetMatchObject = (serverURL) => {
   return {
@@ -12,6 +9,19 @@ export const GetMatchObject = (serverURL) => {
           method: "GET",
           url: serverURL + "matches/data",
           headers: { Authorization: token },
+        });
+        return response.data;
+      } catch (err) {
+        return err.response.data;
+      }
+    },
+    RecorderGetMatch: async (user_id) => {
+      try {
+        let response = await axios({
+          method: "GET",
+          url: serverURL + "matches/data",
+          headers: { Authorization: token },
+          params: { recorder: user_id },
         });
         return response.data;
       } catch (err) {

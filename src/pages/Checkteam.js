@@ -19,15 +19,17 @@ import ImgCrop from "antd-img-crop";
 const { Option } = Select;
 export default function CheckTeams() {
   const { userInfo } = usePages();
-  const { user_id } = userInfo;
+  const { user_id, admin } = userInfo;
   const [data, setData] = useState([]);
   const [onEditTeam, setOnEditTeam] = useState(false);
   const [onNewTeam, setOnNewTeam] = useState(false);
   const [EditTeam, setEditTeam] = useState({});
+  const [loading, setLoading] = useState(true);
   useEffect(async () => {
     if (!user_id) return;
     const response = await Team.GetTeamByID(user_id);
-    setData(response.data);
+    if (response.code === 200) setData(response.data);
+    setLoading(false);
   }, [userInfo]);
   const columns = [
     {
@@ -61,6 +63,68 @@ export default function CheckTeams() {
       },
     },
   ];
+  const statusOption = [
+    { value: "未報名", text: "未報名" },
+    { value: "未繳費", text: "未繳費" },
+    { value: "已繳費", text: "已繳費" },
+  ];
+  const AdministerColumns = [
+    {
+      title: "隊名",
+      dataIndex: "name",
+    },
+    {
+      title: "使用者",
+      dataIndex: "user_id",
+      render: (user) => <a href={`/profile/${user._id}`}>{user.account}</a>,
+    },
+
+    {
+      title: "創建時間",
+      dataIndex: "create_time",
+      render: (value) => new Date(value).toLocaleString(),
+    },
+    {
+      title: "代表系所",
+      dataIndex: "department",
+      render: (value) => Departments["info"][value]["zh"],
+    },
+    {
+      title: "狀態",
+      render: (teamInfo) => {
+        return (
+          <Select
+            defaultValue={teamInfo.status}
+            onChange={async (value) => {
+              const { _id } = teamInfo;
+              const response = await Team.Status(_id, value);
+              if (response.code === 200) message.success("Success");
+            }}
+          >
+            {statusOption.map(({ text, value }) => (
+              <Option value={value}>{text}</Option>
+            ))}
+          </Select>
+        );
+      },
+    },
+    {
+      title: "檢視",
+      render: (value) => {
+        return (
+          <Button
+            type="primary"
+            onClick={() => {
+              setOnEditTeam(true);
+              setEditTeam(value);
+            }}
+          >
+            檢視
+          </Button>
+        );
+      },
+    },
+  ];
   return (
     <div>
       <Button
@@ -73,13 +137,15 @@ export default function CheckTeams() {
         onClick={() => {
           setOnNewTeam(true);
         }}
+        hidden={admin !== "team"}
       >
         新增隊伍
       </Button>
 
       <Table
-        columns={columns}
+        columns={admin === "administer" ? AdministerColumns : columns}
         dataSource={data}
+        loading={loading}
         style={{
           marginRight: 50,
           marginBottom: 50,
@@ -91,6 +157,7 @@ export default function CheckTeams() {
         visable={onEditTeam}
         setVisable={setOnEditTeam}
         setData={setData}
+        editable={admin === "team"}
       />
       <CreateTeam
         visable={onNewTeam}
@@ -205,7 +272,7 @@ function CreateTeam({ value, visable, setVisable, setData }) {
   );
 }
 
-function TeamEditor({ value, visable, setVisable, setData }) {
+function TeamEditor({ value, visable, setVisable, setData, editable }) {
   const [form] = Form.useForm();
   const [onDelete, setOnDelete] = useState(false);
   const [isChanged, setIsChanged] = useState(false);
@@ -265,7 +332,7 @@ function TeamEditor({ value, visable, setVisable, setData }) {
 
   return (
     <Drawer
-      title="編輯隊伍"
+      title={editable ? "編輯隊伍" : "檢視隊伍"}
       placement="right"
       closable={true}
       width={800}
@@ -295,7 +362,7 @@ function TeamEditor({ value, visable, setVisable, setData }) {
               },
             ]}
           >
-            <Input />
+            <Input disabled={!editable} />
           </Form.Item>
           <Form.Item
             label="隊伍系級"
@@ -309,7 +376,7 @@ function TeamEditor({ value, visable, setVisable, setData }) {
               },
             ]}
           >
-            <Select placeholder="Select your department">
+            <Select placeholder="Select your department" disabled={!editable}>
               {Object.keys(Departments.info).map((part, index) => (
                 <Option key={index} value={part}>
                   {Departments.info[part]["zh"]}
@@ -324,6 +391,7 @@ function TeamEditor({ value, visable, setVisable, setData }) {
           onClick={() => setOnDelete(true)}
           type="primary"
           danger
+          hidden={!editable}
         >
           刪除隊伍
         </Button>
@@ -332,14 +400,15 @@ function TeamEditor({ value, visable, setVisable, setData }) {
           onClick={() => form.submit()}
           disabled={!isChanged}
           type="primary"
+          hidden={!editable}
         >
           完成編輯
         </Button>
         <Button style={{ marginRight: 10 }} onClick={handleCancel}>
-          取消編輯
+          {editable ? "取消編輯" : "返回"}
         </Button>
       </div>
-      <PlayersTable teamID={value._id} visable={visable} />
+      <PlayersTable teamID={value._id} visable={visable} editable={editable} />
       <Modal
         title={
           <div>
@@ -357,7 +426,7 @@ function TeamEditor({ value, visable, setVisable, setData }) {
   );
 }
 
-function PlayersTable({ teamID }) {
+function PlayersTable({ teamID, editable }) {
   const [data, setData] = useState([]);
   const [onEditPlayer, setOnEditPlayer] = useState(false);
   const [onDeletePlayer, setOnDeletePlayer] = useState(false);
@@ -429,7 +498,6 @@ function PlayersTable({ teamID }) {
     setPreviewVisible(true);
   };
   const onUploadFile = async (options) => {
-    console.log(options);
     const { onSuccess, onError, file, onProgress } = options;
     onProgress("上傳中");
     const response = await GenerateImageURL(file);
@@ -481,7 +549,9 @@ function PlayersTable({ teamID }) {
           <h4>未上傳</h4>
         ),
     },
-    {
+  ];
+  if (editable)
+    columns.push({
       title: "設定",
       render: (value) => (
         <Button
@@ -496,8 +566,7 @@ function PlayersTable({ teamID }) {
           編輯
         </Button>
       ),
-    },
-  ];
+    });
   const formItemLayout = {
     labelCol: {
       sm: {
@@ -521,6 +590,7 @@ function PlayersTable({ teamID }) {
           form.resetFields();
           setTargetImageUrl(null);
         }}
+        hidden={!editable}
       >
         新增球員
       </Button>

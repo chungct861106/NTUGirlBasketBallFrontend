@@ -13,6 +13,7 @@ import RecordTeam from "../pages/recordTeam";
 import RecordPlayer from "../pages/recordPlayer";
 import Checkteam from "../pages/Checkteam";
 import Contact from "../pages/Contact";
+import Profile from "../pages/Profile";
 export const pagesMenu = () => {
   return {
     News,
@@ -30,5 +31,6 @@ export const pagesMenu = () => {
     Checkteam,
     SchedulerRead,
     Contact,
+    Profile,
   };
 };

@@ -48,14 +48,14 @@ export const GetUserObject = (serverURL) => {
       }
     },
 
-    GetAccountByID: async (id) => {
+    GetAccountByID: async (user_id) => {
       // [Must] id       User ID
       // [Must] token    使用者登入憑證 excpet for {adim: public}
       try {
         let response = await axios({
           method: "GET",
           url: serverURL + "users/data",
-          params: { id },
+          params: { user_id },
           headers: { Authorization: token },
         });
         return response.data;

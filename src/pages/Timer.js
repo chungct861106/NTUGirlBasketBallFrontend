@@ -42,7 +42,7 @@ function App() {
   const [timeNumbers, setNumbers] = useState([]);
   const [teams, setTeams] = useState([]);
   const { userInfo } = usePages();
-  const { user_id } = userInfo;
+  const { user_id, admin } = userInfo;
   const [form] = Form.useForm();
   const toAppointment = (number) => ({
     startDate: new Date(2021, 1, parseInt(number / 3) + 1, (number % 3) + 1),
@@ -56,7 +56,9 @@ function App() {
     const TimeNumber = (WeekDay - 1) * 3 + Hour - 1;
     if (timeNumbers.includes(TimeNumber)) return;
     setNumbers((data) => [...data, TimeNumber]);
-    await Time.TeamAppointment(form.getFieldValue("team"), TimeNumber);
+    if (admin === "team")
+      await Time.TeamAppointment(form.getFieldValue("team"), TimeNumber);
+    else await Time.RecorderAppointment(user_id, TimeNumber);
   };
 
   const DeleteAppointment = async (event) => {
@@ -64,7 +66,9 @@ function App() {
     const Hour = event.appointmentData.startDate.getHours();
     const TimeNumber = (WeekDay - 1) * 3 + Hour - 1;
     setNumbers((data) => [...data].filter((num) => num != TimeNumber));
-    await Time.TeamAppointment(form.getFieldValue("team"), TimeNumber);
+    if (admin === "team")
+      await Time.TeamAppointment(form.getFieldValue("team"), TimeNumber);
+    else await Time.RecorderAppointment(user_id, TimeNumber);
   };
 
   const onTeamChanged = async (id) => {
@@ -76,18 +80,23 @@ function App() {
   };
 
   useEffect(async () => {
-    const response = await Team.GetTeamByID(user_id);
-    if (response.code === 200) {
-      setTeams(
-        response.data.map((team) => ({ value: team._id, name: team.name }))
-      );
-      if (response.data.length > 0) {
-        form.setFieldsValue({ team: response.data[0]._id });
-        const timeResponse = await Time.GetTeamTimeByID(response.data[0]._id);
-        if (timeResponse.code === 200) setNumbers(timeResponse.data.time);
+    if (admin === "team") {
+      const response = await Team.GetTeamByID(user_id);
+      if (response.code === 200) {
+        setTeams(
+          response.data.map((team) => ({ value: team._id, name: team.name }))
+        );
+        if (response.data.length > 0) {
+          form.setFieldsValue({ team: response.data[0]._id });
+          const timeResponse = await Time.GetTeamTimeByID(response.data[0]._id);
+          if (timeResponse.code === 200) setNumbers(timeResponse.data.time);
+        }
       }
+      setloading(false);
+      return;
     }
-
+    const timeResponse = await Time.GetRecorderTimeByID(user_id);
+    if (timeResponse.code === 200) setNumbers(timeResponse.data.time);
     setloading(false);
   }, []);
 
@@ -100,6 +109,7 @@ function App() {
           marginTop: 20,
           width: "30%",
         }}
+        hidden={admin !== "team"}
       >
         <Form.Item label="選擇隊伍" name="team">
           <Select onChange={onTeamChanged}>

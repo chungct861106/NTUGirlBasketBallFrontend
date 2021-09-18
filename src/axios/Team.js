@@ -15,7 +15,32 @@ export const GetTeamObject = (serverURL) => {
         return err.response.message;
       }
     },
-
+    Status: async (team_id, status) => {
+      try {
+        let response = await axios({
+          method: "POST",
+          url: serverURL + "teams/status",
+          data: { team_id, status },
+          headers: { Authorization: token },
+        });
+        return response.data;
+      } catch (err) {
+        return err.response.data;
+      }
+    },
+    GetTeamByID: async (id) => {
+      try {
+        let response = await axios({
+          method: "GET",
+          url: serverURL + "teams/data",
+          query: { user_id: id },
+          headers: { Authorization: token },
+        });
+        return response.data;
+      } catch (err) {
+        return err.response.data;
+      }
+    },
     Update: async ({
       team_id,
       session_preGame,
