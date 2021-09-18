@@ -12,7 +12,6 @@ const CycleDiv = styled.div`
 `;
 
 const Cycles = ({ mapDict, editable }) => {
-  // const { mapDict, editable } = usePreGame();
   const { id } = usePages();
 
   return (

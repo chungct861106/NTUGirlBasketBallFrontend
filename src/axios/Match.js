@@ -49,57 +49,102 @@ export const GetMatchObject = (serverURL) => {
           method: "POST",
           url: serverURL + "matches/create",
           data: {
-            home_id: home,
-            away_id: away,
-            stage: stage,
-            stage_session: stage_session,
+            home,
+            away,
+            stage,
+            stage_session,
           },
           headers: { Authorization: token },
         });
-        return response.data;
+        return response.data.data;
       } catch (err) {
         return `[Error][Match][Create]` + err;
       }
     },
 
-    // CreateInterMatch: async( home, away, stage ) => {
-    //   try{
-    //     let response = await axios({
-    //       method: "POST",
-    //       url: serverURL + "matches/createInterMatch",
-    //       data: { home_id: home, away_id: away, stage: stage},
-    //       headers: { Authorization: token },
-    //     });
-    //     return response.data;
-    //   } catch (err){
-    //     return `[Error][Match][CreateInterMatch]` + err;
-    //   }
-    // },
-    DeleteSession: async (stage) => {
-      try {
-        let response = await axios({
-          method: "DELETE",
-          url: serverURL + "matches/deleteSession",
-          params: { stage: stage },
-          headers: { Authorization: token },
-        });
-        return response.data;
-      } catch (err) {
-        throw err;
-      }
-    },
-    CheckIfStage: async (stage) => {
+    GetMatch: async ({
+      match_id,
+      home,
+      away,
+      stage,
+      stage_session,
+      field,
+      recorder,
+      winner,
+    }) => {
       try {
         let response = await axios({
           method: "GET",
-          url: serverURL + "matches/checkIfStage",
-          params: { stage },
+          url: serverURL + "matches/data",
+          params: {
+            match_id,
+            home,
+            away,
+            stage,
+            stage_session,
+            field,
+            recorder,
+            winner,
+          },
           headers: { Authorization: token },
         });
-        return response.data;
+        return response.data.data;
       } catch (err) {
-        throw err;
+        return err.response.data.message;
       }
     },
+    Delete: async (match_id) => {
+      try {
+        let response = await axios({
+          method: "DELETE",
+          url: serverURL + "matches/delete",
+          data: { match_id },
+          headers: { Authorization: token },
+        });
+        return response.data.data;
+      } catch (err) {
+        return err.response.message;
+      }
+    },
+
+    // // CreateInterMatch: async( home, away, stage ) => {
+    // //   try{
+    // //     let response = await axios({
+    // //       method: "POST",
+    // //       url: serverURL + "matches/createInterMatch",
+    // //       data: { home_id: home, away_id: away, stage: stage},
+    // //       headers: { Authorization: token },
+    // //     });
+    // //     return response.data;
+    // //   } catch (err){
+    // //     return `[Error][Match][CreateInterMatch]` + err;
+    // //   }
+    // // },
+    // DeleteSession: async (stage) => {
+    //   try {
+    //     let response = await axios({
+    //       method: "DELETE",
+    //       url: serverURL + "matches/deleteSession",
+    //       params: { stage: stage },
+    //       headers: { Authorization: token },
+    //     });
+    //     return response.data;
+    //   } catch (err) {
+    //     throw err;
+    //   }
+    // },
+    // CheckIfStage: async (stage) => {
+    //   try {
+    //     let response = await axios({
+    //       method: "GET",
+    //       url: serverURL + "matches/checkIfStage",
+    //       params: { stage },
+    //       headers: { Authorization: token },
+    //     });
+    //     return response.data;
+    //   } catch (err) {
+    //     throw err;
+    //   }
+    // },
   };
 };

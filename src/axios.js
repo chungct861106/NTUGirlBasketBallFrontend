@@ -88,5 +88,5 @@ export const Team = GetTeamObject("http://localhost:4000/");
 export const Time = GetTimeObject("http://localhost:4000/");
 export const Match = GetMatchObject("http://localhost:4000/");
 export const Recorder = GetRecorderObject(serverURL);
-export const Post = GetPostObject(serverURL);
+export const Post = GetPostObject("http://localhost:4000/");
 export const Record = GetRecordObject(serverURL);

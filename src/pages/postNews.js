@@ -71,6 +71,11 @@ const PostNews = () => {
           urlRef.current.props.value
         );
       } else {
+        console.log(
+          "in postNews, post image: ",
+          createType,
+          urlRef.current.props.value
+        );
         Post.Create(createType, "圖片", "圖片", urlRef.current.props.value);
       }
       form.resetFields();

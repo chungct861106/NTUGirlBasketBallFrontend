@@ -12,7 +12,7 @@ import config from "./config";
 
 const tableType = {
   users: async () => await User.GetALLAccount(),
-  teams: async () => await Team.GetALLTeam(),
+  teams: async () => await Team.GetTeam(),
   recorders: async () => await Recorder.GetALLRecorder(),
   matches: async () => await Match.GetALLMatch(),
 };

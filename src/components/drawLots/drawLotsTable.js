@@ -2,20 +2,22 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import "antd/dist/antd.css";
 import { Table, Input, Form } from "antd";
 
-const GameCol = [
-  {
-    title: "球隊",
-    dataIndex: "name",
-    key: "name",
-    width: "50%",
-  },
-  {
-    title: "場次",
-    dataIndex: "session",
-    key: "session",
-    editable: true,
-  },
-];
+const GameCol = (sessionType) => {
+  return [
+    {
+      title: "球隊",
+      dataIndex: "name",
+      key: "name",
+      width: "50%",
+    },
+    {
+      title: "場次",
+      dataIndex: sessionType,
+      key: sessionType,
+      editable: true,
+    },
+  ];
+};
 
 const EditableContext = React.createContext(null);
 
@@ -85,12 +87,12 @@ const EditableCell = ({
   return <td {...restProps}>{childNode}</td>;
 };
 
-const DrawLotsTable = ({ gameTable, setGameTable }) => {
-  const [columns] = useState(GameCol);
+const DrawLotsTable = ({ sessionType, gameTable, setGameTable }) => {
+  const [columns] = useState(GameCol(sessionType));
 
   const handleSave = (row) => {
     const newData = JSON.parse(JSON.stringify(gameTable));
-    const index = newData.findIndex((item) => row.key === item.key);
+    const index = newData.findIndex((item) => row.team_id === item.team_id);
     const item = newData[index];
     newData.splice(index, 1, { ...item, ...row });
     setGameTable(() => newData);

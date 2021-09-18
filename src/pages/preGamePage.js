@@ -132,8 +132,8 @@ const PreGamePage = () => {
           <BottomDiv>
             {editable && (
               <LeftBlock>
-                {/* <PreGameTable /> */}
                 <DrawLotsTable
+                  sessionType={"session_preGame"}
                   gameTable={preGameTable}
                   setGameTable={setPreGameTable}
                 />
