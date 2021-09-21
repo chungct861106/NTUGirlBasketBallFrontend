@@ -9,6 +9,7 @@ import MemberFoul from "./memberFoul";
 
 const TeamScoreDiv = styled.div`
   width: 70%;
+  padding: 20px 0px;
 `;
 
 const ScoreDiv = styled.div`
@@ -79,7 +80,6 @@ const StyledH3 = styled.h3`
 `;
 
 const TeamScore = ({ aMatch, teamType, session, homeBall, setHomeBall }) => {
-  console.log("in teamScore1: ", aMatch, teamType, session);
   const {
     teamInfo,
     totalScore,
@@ -113,13 +113,13 @@ const TeamScore = ({ aMatch, teamType, session, homeBall, setHomeBall }) => {
 
           <TeamBall>
             <StyledH3>{teamInfo.name}</StyledH3>
-            {teamInfo.type === "home" && homeBall && (
+            {teamType === "home" && homeBall && (
               <BasketballIcon
                 icon={faBasketballBall}
                 onClick={() => setHomeBall(() => (homeBall ? false : true))}
               />
             )}
-            {teamInfo.type === "away" && !homeBall && (
+            {teamType === "away" && !homeBall && (
               <BasketballIcon
                 icon={faBasketballBall}
                 onClick={() => setHomeBall(() => (homeBall ? false : true))}

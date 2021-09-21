@@ -3,7 +3,6 @@ import styled from "styled-components";
 import { Checkbox } from "antd";
 
 const TeamStopWatch = styled.div`
-  // border: 1px solid black;
   padding: 5px;
   display: block;
 `;
@@ -44,7 +43,6 @@ const StopWatch = ({ arr, setArr }) => {
       <StopWatchSubDiv>
         <StyledH5>下半場</StyledH5>
         {[2, 3, 4].map((i, index) => {
-          console.log(arr[i]);
           return (
             <Checkbox
               key={index}

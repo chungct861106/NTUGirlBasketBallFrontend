@@ -3,7 +3,7 @@ import styled from "styled-components";
 import TeamScore from "../components/recordTeam/teamScore";
 import RecordTime from "../components/recordTeam/recordTime";
 import { Button } from "antd";
-// import "antd/dist/antd.css";
+import { RecordTeamAPI } from "../axios";
 
 const ContentBackground = styled.div`
   height: 1000px;
@@ -66,13 +66,6 @@ const DivideLine = styled.div`
 `;
 
 const RecordTeam = (props) => {
-  console.log("in recordTeam: ", JSON.parse(props.match.params.aMatch));
-  // const aMatch = {
-  //   match_id: 100,
-  //   home: 5,
-  //   away: 6,
-  //   recorder: "紀錄員1",
-  // };
   const aMatch = JSON.parse(props.match.params.aMatch);
 
   // teamInfo, from aMatch, and should got other data from backend
@@ -80,26 +73,62 @@ const RecordTeam = (props) => {
   const [homeBall, setHomeBall] = useState();
 
   useEffect(() => {
-    let updateSession = parseInt(
-      localStorage.getItem(`${aMatch.match_id}-session`)
-    );
-    let updateHomeBall = localStorage.getItem(`${aMatch.match_id}-homeBall`);
+    let updateSession = parseInt(localStorage.getItem(`${aMatch._id}-session`));
+    let updateHomeBall = localStorage.getItem(`${aMatch._id}-homeBall`);
     if (!updateSession || !updateHomeBall) {
       updateSession = 1;
       updateHomeBall = true;
-      localStorage.setItem(`${aMatch.match_id}-session`, updateSession);
-      localStorage.setItem(`${aMatch.match_id}-homeBall`, updateHomeBall);
+      localStorage.setItem(`${aMatch._id}-session`, updateSession);
+      localStorage.setItem(`${aMatch._id}-homeBall`, updateHomeBall);
     }
     setSession(() => updateSession);
     setHomeBall(() => updateHomeBall);
   }, []);
+
+  const handleSave = () => {
+    console.log("in handleSave");
+    generateSaveData("home");
+  };
+
+  const generateSaveData = async (teamType) => {
+    const Key = `${aMatch._id}-${aMatch[teamType]._id}`;
+    const quarterScore = JSON.parse(
+      localStorage.getItem(`${Key}-quarterScore`)
+    );
+    const quarterFoul = JSON.parse(localStorage.getItem(`${Key}-quarterFoul`));
+    const stopWatch = JSON.parse(localStorage.getItem(`${Key}-stopWatch`));
+    const Data = {
+      match_id: aMatch._id,
+      team_id: aMatch[teamType]._id,
+      score1: quarterScore[0],
+      score2: quarterScore[1],
+      score3: quarterScore[2],
+      score4: quarterScore[3],
+      foul1: quarterFoul[0],
+      foul2: quarterFoul[1],
+      foul3: quarterFoul[2],
+      foul4: quarterFoul[3],
+      stopWatch1: stopWatch[0],
+      stopWatch2: stopWatch[1],
+      stopWatch3: stopWatch[2],
+      stopWatch4: stopWatch[3],
+      stopWatch5: stopWatch[4],
+    };
+
+    try {
+      const res = await RecordTeamAPI.Create(Data);
+      console.log("in recordTeam, SaveData, response:", res);
+    } catch (err) {
+      console.log("in recordTeam, SaveData fail");
+    }
+  };
 
   return (
     <ContentBackground className="ant-layout-content">
       <ContentBody className="site-layout-content">
         <ButtonDiv>
           <StyledButton>重置</StyledButton>
-          <StyledButton>比賽結束</StyledButton>
+          <StyledButton onClick={() => handleSave()}>比賽結束</StyledButton>
         </ButtonDiv>
         <TimeDiv>
           <RecordTime

@@ -20,8 +20,6 @@ const QuarterScoreButton = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
-  // margin-right: 10px;
-  // float: right;
 `;
 const AScoreDiv = styled.div`
   display: inline-flex;

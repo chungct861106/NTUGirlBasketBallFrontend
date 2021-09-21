@@ -11,29 +11,26 @@ export const useInterGame = () => {
 
   useEffect(() => {
     (async () => {
-      const interGameData = await Team.GetInterGame();
-      let newData = [];
-      Object.entries(interGameData).forEach((data) =>
-        newData.push({
-          key: data[1].team_id,
-          name: data[1].name,
-          session: data[1].session_interGame,
-        })
-      );
-      setInterGameTable(newData);
-      setInterTeamNum(newData.length);
-
-      try {
-        const stage = "interGame";
-        const ifStage = await Match.CheckIfStage(stage);
-        setEditable(() => (ifStage ? false : true));
-      } catch (err) {
-        console.log("in preGame, checkIfStage false");
-      }
+      // const interGameData = await Team.GetInterGame();
+      // let newData = [];
+      // Object.entries(interGameData).forEach((data) =>
+      //   newData.push({
+      //     key: data[1].team_id,
+      //     name: data[1].name,
+      //     session: data[1].session_interGame,
+      //   })
+      // );
+      // setInterGameTable(newData);
+      // setInterTeamNum(newData.length);
+      // try {
+      //   const stage = "interGame";
+      //   const ifStage = await Match.CheckIfStage(stage);
+      //   setEditable(() => (ifStage ? false : true));
+      // } catch (err) {
+      //   console.log("in preGame, checkIfStage false");
+      // }
     })();
   }, []);
-
-  console.log("interGame hook: ", interTeamNum);
 
   const generateModal = (action) => {
     let secondsToGo = 5;
@@ -68,37 +65,33 @@ export const useInterGame = () => {
     //      if checkIfStage, delete match
     //      create match
     // else, break & show not fill msg
-
-    await Object.entries(interGameTable).map((team) => {
-      Team.UpdateSession(
-        "session_interGame",
-        team[1].key,
-        team[1].session || "--"
-      );
-    });
-
-    const teamSessionFill = await Team.CheckFillSession("session_interGame");
-    if (teamSessionFill) {
-      const havePreGame = await Match.CheckIfStage("interGame");
-      if (havePreGame) {
-        await Match.DeleteSession("interGame");
-      }
-
-      let tempArr = [];
-      Object.entries(mapDict).map(async (team, index) => {
-        tempArr.push(team);
-      });
-      createMatch(tempArr);
-      generateModal("result");
-      matchCount = 0;
-    } else {
-      await Match.DeleteSession("interGame");
-      generateModal("not fill yet");
-    }
+    // await Object.entries(interGameTable).map((team) => {
+    //   Team.UpdateSession(
+    //     "session_interGame",
+    //     team[1].key,
+    //     team[1].session || "--"
+    //   );
+    // });
+    // const teamSessionFill = await Team.CheckFillSession("session_interGame");
+    // if (teamSessionFill) {
+    //   const havePreGame = await Match.CheckIfStage("interGame");
+    //   if (havePreGame) {
+    //     await Match.DeleteSession("interGame");
+    //   }
+    //   let tempArr = [];
+    //   Object.entries(mapDict).map(async (team, index) => {
+    //     tempArr.push(team);
+    //   });
+    //   createMatch(tempArr);
+    //   generateModal("result");
+    //   matchCount = 0;
+    // } else {
+    //   await Match.DeleteSession("interGame");
+    //   generateModal("not fill yet");
+    // }
   };
 
   useMemo(async () => {
-    // setTimeout(() => {
     let updateDict = {};
     for (let i = 1; i <= interTeamNum; i++) {
       updateDict[i.toString()] = { session: i.toString() };
@@ -113,7 +106,6 @@ export const useInterGame = () => {
       }
     });
     await setMapDict(updateDict);
-    // }, 500);
   }, [interTeamNum, interGameTable]);
 
   const createMatch = (arr) => {
