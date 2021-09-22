@@ -3,7 +3,7 @@ import styled from "styled-components";
 import TeamScore from "../components/recordTeam/teamScore";
 import RecordTime from "../components/recordTeam/recordTime";
 import { Button } from "antd";
-import { RecordTeamAPI } from "../axios";
+import { RecordTeamAPI, Match } from "../axios";
 
 const ContentBackground = styled.div`
   height: 1000px;
@@ -87,11 +87,49 @@ const RecordTeam = (props) => {
 
   const handleSave = () => {
     console.log("in handleSave");
-    generateSaveData("home");
-    generateSaveData("away");
+    saveData("home");
+    saveData("away");
+    saveWinTeam();
   };
 
-  const generateSaveData = async (teamType) => {
+  const saveWinTeam = async () => {
+    const accumulateArr = (arr) => {
+      return arr.reduce((accu, cur) => {
+        return accu + cur;
+      }, 0);
+    };
+    let winner;
+    const homeArr = JSON.parse(
+      localStorage.getItem(`${aMatch._id}-${aMatch.home._id}-quarterScore`)
+    );
+    const awayArr = JSON.parse(
+      localStorage.getItem(`${aMatch._id}-${aMatch.away._id}-quarterScore`)
+    );
+    const homeScore = accumulateArr(homeArr);
+    const awayScore = accumulateArr(awayArr);
+
+    if (homeScore > awayScore) {
+      winner = "home";
+    } else {
+      winner = "away";
+    }
+
+    try {
+      const res = await Match.Update({ match_id: aMatch._id, winner: winner });
+      console.log(
+        "in recordTeam, updateMatchWinner: ",
+        {
+          match_id: aMatch._id,
+          winner: winner,
+        },
+        res
+      );
+    } catch (err) {
+      console.log("in recordTeam, updateMatchWinner fail");
+    }
+  };
+
+  const saveData = async (teamType) => {
     const Key = `${aMatch._id}-${aMatch[teamType]._id}`;
     const quarterScore = JSON.parse(
       localStorage.getItem(`${Key}-quarterScore`)
