@@ -12,8 +12,8 @@ const InChargeGame = () => {
   const [onInspect, setOnInspect] = useState(false);
   useEffect(async () => {
     try {
-      const response = await Match.RecorderGetMatch(user_id);
-      if (response.code === 200) setDataSource(response.data);
+      const response = await Match.GetMatch({ recorder: user_id });
+      setDataSource(response);
     } catch (err) {
       throw err;
     }

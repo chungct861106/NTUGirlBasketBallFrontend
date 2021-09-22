@@ -93,6 +93,37 @@ export const GetMatchObject = (serverURL) => {
         return err.response.data.message;
       }
     },
+    Update: async ({
+      match_id,
+      home,
+      away,
+      stage,
+      stage_session,
+      field,
+      recorder,
+      winner,
+    }) => {
+      try {
+        let response = await axios({
+          method: "POST",
+          url: serverURL + "matches/update",
+          data: {
+            match_id,
+            home,
+            away,
+            stage,
+            stage_session,
+            field,
+            recorder,
+            winner,
+          },
+          headers: { Authorization: token },
+        });
+        return response.data;
+      } catch (err) {
+        return err.response.message;
+      }
+    },
     Delete: async (match_id) => {
       try {
         let response = await axios({

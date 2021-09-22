@@ -1,16 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 
 const useTeamScore = ({ aMatch, teamType, session }) => {
-  const teamId = aMatch[teamType];
-  const saveKey = `${aMatch.match_id}-${teamId}`;
+  const teamId = aMatch[teamType]._id;
+  const saveKey = `${aMatch._id}-${teamId}`;
   const [teamInfo, setTeamInfo] = useState({});
   const [quarterScore, setQuarterScore] = useState([]);
   const [totalScore, setTotalScore] = useState(0);
   const [quarterFoul, setQuarterFoul] = useState([]);
   const [membersFoul, setMembersFoul] = useState({});
   const [stopWatch, setStopWatch] = useState([]);
-
-  console.log("in useTeamScore: ", aMatch, teamId, session, saveKey);
 
   useEffect(() => {
     let updateTeamInfo = JSON.parse(
@@ -37,16 +35,10 @@ const useTeamScore = ({ aMatch, teamType, session }) => {
     ) {
       // get teamInfo using team_id
       if (teamType === "home") {
-        updateTeamInfo = {
-          name: "隊伍一",
-          type: "home",
-        };
+        updateTeamInfo = aMatch.home;
       } else if (teamType === "away") {
-        updateTeamInfo = {
-          name: "隊伍二",
-          type: "away",
-        };
-      } //temp
+        updateTeamInfo = aMatch.away;
+      }
 
       // get member list using teamInfo
       const tempMemberList = [1, 2, 3, 4, 5]; //temp

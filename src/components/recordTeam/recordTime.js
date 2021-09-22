@@ -78,7 +78,6 @@ const RecordTime = ({ session, setSession, aMatch }) => {
   };
 
   const nextSession = () => {
-    console.log("sessionType", typeof session, session);
     setSession(() => session + 1);
     setTime(() => initialTime);
     elapsedTime = 0;
@@ -99,16 +98,16 @@ const RecordTime = ({ session, setSession, aMatch }) => {
       setTime(() => 0);
     }
 
-    localStorage.setItem(`${aMatch.match_id}-recordTime`, time);
+    localStorage.setItem(`${aMatch._id}-recordTime`, time);
   }, [time]);
 
   useEffect(() => {
     // initial(refresh | new)
-    const refreshTime = localStorage.getItem(`${aMatch.match_id}-recordTime`);
+    const refreshTime = localStorage.getItem(`${aMatch._id}-recordTime`);
     if (refreshTime) {
       setTime(() => refreshTime);
     } else {
-      localStorage.setItem(`${aMatch.match_id}-recordTime`, time);
+      localStorage.setItem(`${aMatch._id}-recordTime`, time);
     }
   }, []);
 

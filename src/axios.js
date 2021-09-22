@@ -7,6 +7,7 @@ import { GetRecorderObject } from "./axios/Recorder";
 import { GetMatchObject } from "./axios/Match";
 import { GetPostObject } from "./axios/Post";
 import { GetRecordObject } from "./axios/Record";
+import { GetRecordTeamObject } from "./axios/RecordTeam";
 
 const serverURL = "https://girlbasketball.herokuapp.com/";
 const testUsers = {
@@ -90,3 +91,4 @@ export const Match = GetMatchObject("http://localhost:4000/");
 export const Recorder = GetRecorderObject(serverURL);
 export const Post = GetPostObject("http://localhost:4000/");
 export const Record = GetRecordObject(serverURL);
+export const RecordTeamAPI = GetRecordTeamObject("http://localhost:4000/");
