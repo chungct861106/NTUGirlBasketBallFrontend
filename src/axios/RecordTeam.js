@@ -8,7 +8,7 @@ export const GetRecordTeamObject = (serverURL) => {
         console.log("in axios, recordTeam.create: ", recordTeamObject);
         let response = await axios({
           method: "POST",
-          url: serverURL + "matches/create",
+          url: serverURL + "recordTeam/create",
           data: recordTeamObject,
           headers: { Authorization: token },
         });

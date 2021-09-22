@@ -88,6 +88,7 @@ const RecordTeam = (props) => {
   const handleSave = () => {
     console.log("in handleSave");
     generateSaveData("home");
+    generateSaveData("away");
   };
 
   const generateSaveData = async (teamType) => {
