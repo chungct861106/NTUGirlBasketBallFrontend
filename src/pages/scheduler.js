@@ -11,7 +11,7 @@ import AppointmentFormat from "../components/Appointment";
 import "devextreme/dist/css/dx.common.css";
 import "devextreme/dist/css/dx.light.css";
 import "../css/scheduler.css";
-import { Match, Team, Time, User } from "../axios";
+import { Match, Time, User } from "../axios";
 import { LoadPanel } from "devextreme-react/load-panel";
 import { usePages } from "../hooks/usePages";
 
@@ -253,7 +253,6 @@ export default function MyScheduler() {
       >
         <Scheduler
           ref={scheduler}
-          adaptivityEnabled={true}
           timeZone="Asia/Taipei"
           id="scheduler"
           dataSource={arrangedMatches}
@@ -317,7 +316,6 @@ export default function MyScheduler() {
           <Draggable
             id="DragList"
             data="dropArea"
-            height={100}
             group={draggingGroupName}
             onDragStart={onListDragStart}
           >

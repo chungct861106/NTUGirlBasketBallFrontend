@@ -579,6 +579,9 @@ function PlayersTable({ teamID, editable }) {
       },
     },
   };
+  useEffect(() => {
+    setLoadingImage(true);
+  }, [targetImageUrl]);
   return (
     <React.Fragment>
       <Table columns={columns} dataSource={data} loading={loading} />

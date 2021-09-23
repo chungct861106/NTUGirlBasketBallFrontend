@@ -82,6 +82,9 @@ function PlayerInspector({ match, visible, setVisable }) {
       setAwayPlayer(AwayResponse.data);
     }
   }, [match, visible]);
+  useEffect(() => {
+    setLoadingImage(true);
+  }, [targetPlayer]);
   const columns = [
     {
       title: "姓名",

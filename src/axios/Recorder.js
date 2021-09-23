@@ -3,12 +3,6 @@ import { token } from "../axios";
 export const GetRecorderObject = (serverURL) => {
   return {
     Create: async (name, department) => {
-      // return status success | fail_<reason>
-
-      // [Must] name         隊伍名稱
-      // [Must] department   隊伍校系
-      // [Must] token        {administer: team}
-
       try {
         let response = await axios({
           method: "POST",

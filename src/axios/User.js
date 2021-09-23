@@ -16,19 +16,16 @@ export const GetUserObject = (serverURL) => {
     },
 
     AccountActive: async (id) => {
-      // [Must] id       User ID
-      // [Must] token    使用者登入憑證 {adim: administer}
-
       try {
         let response = await axios({
           method: "POST",
           url: serverURL + "users/active",
-          data: { id: id },
+          data: { id },
           headers: { Authorization: token },
         });
         return response.data;
       } catch (err) {
-        return `[Error][User][Active]` + err;
+        return err.response.data;
       }
     },
     AccountDelete: async (id) => {
@@ -44,13 +41,11 @@ export const GetUserObject = (serverURL) => {
         });
         return response.data;
       } catch (err) {
-        return `[Error][User][Delete]` + err;
+        return err.response.data;
       }
     },
 
     GetAccountByID: async (user_id) => {
-      // [Must] id       User ID
-      // [Must] token    使用者登入憑證 excpet for {adim: public}
       try {
         let response = await axios({
           method: "GET",
