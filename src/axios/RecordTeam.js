@@ -30,5 +30,22 @@ export const GetRecordTeamObject = (serverURL) => {
         return err.response.message;
       }
     },
+    GetRecordTeam: async ({ recordTeam_id, match_id, team_id }) => {
+      try {
+        let response = await axios({
+          method: "GET",
+          url: serverURL + "recordTeam/data",
+          params: {
+            recordTeam_id,
+            match_id,
+            team_id,
+          },
+          headers: { Authorization: token },
+        });
+        return response.data.data;
+      } catch (err) {
+        return err.response.data.message;
+      }
+    },
   };
 };

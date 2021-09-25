@@ -100,14 +100,14 @@ export const GetTeamObject = (serverURL) => {
       }
     },
 
-    GetTeam: async (
+    GetTeam: async ({
       team_id = null,
       session_preGame = null,
       session_interGame = null,
       name = null,
       department = null,
-      user_id = null
-    ) => {
+      user_id = null,
+    }) => {
       try {
         let response = await axios({
           method: "GET",
