@@ -69,7 +69,9 @@ const Kickout = ({ mapDict, interTeamNum }) => {
         {renderDict.map((group, index1) => (
           <StyledGroupTeam>
             {group.map((team, index2) => (
-              <StyleP key={index2}>{team[1].name || team[1].session}</StyleP>
+              <StyleP key={index2}>
+                {team[1].name || team[1].session_interGame}
+              </StyleP>
             ))}
           </StyledGroupTeam>
         ))}

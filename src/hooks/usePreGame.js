@@ -13,7 +13,7 @@ export const usePreGame = () => {
     effect();
 
     async function effect() {
-      const preGameData = await Team.GetTeam();
+      const preGameData = await Team.GetTeam({});
       let ifEditable = false;
       let newData = [];
       Object.entries(preGameData).forEach((data) => {

@@ -128,6 +128,7 @@ const InterGamePage = () => {
                 <DrawLotsTable
                   gameTable={interGameTable}
                   setGameTable={setInterGameTable}
+                  sessionType={"session_interGame"}
                 />
               </LeftBlock>
             )}
