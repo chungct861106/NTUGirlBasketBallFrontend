@@ -71,12 +71,12 @@ const PostNews = () => {
           urlRef.current.props.value
         );
       } else {
-        console.log(
-          "in postNews, post image: ",
+        Post.Create(
           createType,
+          "圖片",
+          `圖片${urlRef.current.props.value}`,
           urlRef.current.props.value
         );
-        Post.Create(createType, "圖片", "圖片", urlRef.current.props.value);
       }
       form.resetFields();
     } catch (err) {
@@ -206,9 +206,6 @@ const PostNews = () => {
           >
             <Input ref={urlRef} />
           </Form.Item>
-
-          {/* <input type="file" onChange={handleInputChange} /> */}
-          {/* <button onClick={handleUpload}>upload</button> */}
         </StyledForm>
       </ContentBody>
     </ContentBackground>
