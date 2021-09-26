@@ -3,7 +3,7 @@ import { Card, Form, Spin } from "antd";
 import { useParams } from "react-router";
 import styled from "styled-components";
 import { User } from "../axios";
-
+import { translateDepartment } from "../department";
 const ContentBackground = styled.div`
   height: 100vh;
   padding: 50px 100px;
@@ -34,9 +34,11 @@ export default () => {
           <Form {...layout}>
             <Form.Item label="使用者帳號">{user.account}</Form.Item>
             <Form.Item label="使用者信箱">{user.email}</Form.Item>
-            <Form.Item label="使用者系所">{user.department}</Form.Item>
+            <Form.Item label="使用者系所">
+              {translateDepartment(user.department)}
+            </Form.Item>
             <Form.Item label="使用者狀態">
-              {user.active ? "未開通" : "已開通"}
+              {user.active ? "已開通" : "未開通"}
             </Form.Item>
           </Form>
         ) : (

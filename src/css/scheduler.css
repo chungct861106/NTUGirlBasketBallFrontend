@@ -15,8 +15,7 @@
 .item {
   box-sizing: border-box;
   padding: 10px 30px;
-  margin-left: 5px;
-  margin-right: 5px;
+  margin: 5px;
 }
 
 #scheduler {
@@ -37,7 +36,15 @@
   white-space: normal;
 }
 
+.showtime-preview {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-content: center;
+}
+
 .showtime-preview > div:not(:first-child) {
+  margin-top: 3px;
   font-size: 11px;
   text-align: center;
   white-space: normal;
@@ -104,4 +111,8 @@
 
 #scroll .show_remove {
   background-color: #ff000d;
+}
+
+.dx-scrollable-container tr {
+  height: 80px;
 }

@@ -16,6 +16,7 @@ const {
   Checkteam,
   SchedulerRead,
   Contact,
+  ManageUser,
 } = pagesMenu();
 
 // 找到相對應頁面，改後面的component
@@ -35,6 +36,7 @@ const zhPage = {
   register: ["報名", Default],
   scheduleTime: ["填寫賽程時間", Timer],
   Checkteam: ["確認隊伍資訊", Checkteam],
+  ManageUser: ["管理使用者", ManageUser],
 };
 const idPage = {
   public: ["main", "scheduleRead", "gameResult", "contact"],
@@ -45,6 +47,7 @@ const idPage = {
     "schedule",
     "annouce",
     "Checkteam",
+    "ManageUser",
   ],
   recorder: ["main", "inChargeGame", "scheduleTime", "scheduleRead"],
   team: ["main", "register", "Checkteam", "scheduleTime", "scheduleRead"],

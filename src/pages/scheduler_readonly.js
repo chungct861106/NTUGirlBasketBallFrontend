@@ -1,24 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { message, Modal, Image, Table, Select, Button, Form } from "antd";
-import Scheduler, {
-  AppointmentDragging,
-  Resource,
-  View,
-} from "devextreme-react/scheduler";
-import Draggable from "devextreme-react/draggable";
-import ScrollView from "devextreme-react/scroll-view";
+import { Modal, Image, Table, Select, Button, Form } from "antd";
+import Scheduler, { Resource, View } from "devextreme-react/scheduler";
+import { translateDepartment } from "../department";
 import AppointmentFormat from "../components/Appointment";
 import "devextreme/dist/css/dx.common.css";
 import "devextreme/dist/css/dx.light.css";
 import "../css/scheduler.css";
-import { Match, Time, User } from "../axios";
+import { Match, User } from "../axios";
 import { LoadPanel } from "devextreme-react/load-panel";
 import { usePages } from "../hooks/usePages";
 
-const { Option } = Select;
-
 const views = ["workWeek"];
-const draggingGroupName = "appointmentsGroup";
+
 const TimeRangeObject = { 1: "12:30", 2: "18:30", 3: "19:30" };
 
 const FieldData = [
@@ -43,13 +36,8 @@ const testData = [];
 
 export default function MyScheduler() {
   const [loading, setLoading] = useState(true);
-  const [matches, setMatches] = useState([]);
   const [arrangedMatches, setArranged] = useState(testData);
-  const [teamBusyTime, setTeamBusyTime] = useState({});
-  const [AllBusyTime, setbusytime] = useState({});
   const [recorders, setRecorders] = useState([]);
-  const [recorderBusyTime, setRecorderBusyTime] = useState({});
-  const [gameType, setGameType] = useState("preGame");
   const [onEditAppointment, setOnEdit] = useState(false);
   const [target, setTarget] = useState(null);
   const scheduler = useRef();
@@ -190,18 +178,16 @@ function AppointmentForm({
     0: "https://i.imgur.com/uR9JIRI.png",
     1: "https://i.imgur.com/C378EBB.png",
   };
-  const onRecorderChanged = (value) => {
-    setAppointments((data) =>
-      data.map((match) => {
-        if (match._id === _id) match.recorder = value;
-        return match;
-      })
-    );
-  };
-  const { _id, home, away, text, startDate, field, recorder } = data;
+
+  const { home, away, text, startDate, field, recorder } = data;
   const columns = [
-    { title: "學系", dataIndex: "department" },
-    { title: "報名狀態", dataIndex: "status" },
+    { title: "隊名", dataIndex: "name" },
+    {
+      title: "學系",
+      dataIndex: "department",
+      render: (value) => translateDepartment(value),
+    },
+    { title: "狀態", dataIndex: "status" },
     { title: "預賽編號", dataIndex: "session_preGame" },
   ];
   return (
@@ -232,18 +218,11 @@ function AppointmentForm({
         <Table columns={columns} dataSource={[home, away]} pagination={false} />
         <Form>
           <Form.Item label="紀錄員">
-            <Select
-              placeholder="尚未指派紀錄員"
-              onChange={onRecorderChanged}
-              value={recorder}
-              disabled={true}
-            >
-              {recorders.map((user) => (
-                <Option value={user._id}>
-                  {`${user.account} (${user.department})`}
-                </Option>
-              ))}
-            </Select>
+            {recorder ? (
+              <a href={`/profile/${recorder._id}`}>{recorder.account}</a>
+            ) : (
+              "尚未指派"
+            )}
           </Form.Item>
         </Form>
       </div>

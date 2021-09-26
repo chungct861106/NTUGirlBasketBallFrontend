@@ -11,10 +11,10 @@ import AppointmentFormat from "../components/Appointment";
 import "devextreme/dist/css/dx.common.css";
 import "devextreme/dist/css/dx.light.css";
 import "../css/scheduler.css";
-import { Match, Team, Time, User } from "../axios";
+import { Match, Time, User } from "../axios";
 import { LoadPanel } from "devextreme-react/load-panel";
 import { usePages } from "../hooks/usePages";
-
+import { translateDepartment } from "../department";
 const { Option } = Select;
 
 const views = ["workWeek"];
@@ -211,11 +211,14 @@ export default function MyScheduler() {
   };
   useEffect(async () => {
     if (!user_id) return;
+    console.log("GetData");
     let response = await Match.GetALLMatch();
     if (response.code === 200) {
       setMatches(
         response.data
-          .filter((match) => match.startDate === null)
+          .filter(
+            (match) => match.startDate === null && match.home && match.away
+          )
           .map((match) => {
             match.text = `${match.home.name} vs ${match.away.name}`;
             match.startDate = new Date(match.startDate);
@@ -224,7 +227,9 @@ export default function MyScheduler() {
       );
       setArranged(
         response.data
-          .filter((match) => match.startDate !== null)
+          .filter(
+            (match) => match.startDate !== null && match.home && match.away
+          )
           .map((match) => {
             match.text = `${match.home.name} vs ${match.away.name}`;
             match.startDate = new Date(match.startDate);
@@ -253,12 +258,10 @@ export default function MyScheduler() {
       >
         <Scheduler
           ref={scheduler}
-          adaptivityEnabled={true}
           timeZone="Asia/Taipei"
           id="scheduler"
           dataSource={arrangedMatches}
           defaultCurrentDate={new Date(2021, 1, 1)}
-          height={"100%"}
           startDayHour={1}
           endDayHour={4}
           cellDuration={60}
@@ -317,7 +320,6 @@ export default function MyScheduler() {
           <Draggable
             id="DragList"
             data="dropArea"
-            height={100}
             group={draggingGroupName}
             onDragStart={onListDragStart}
           >
@@ -399,14 +401,20 @@ function AppointmentForm({
     if (response.code === 200)
       setAppointments((data) =>
         data.map((match) => {
-          if (match._id === _id) match.recorder = value;
+          if (match._id === _id) match.recorder = response.data.recorder;
           return match;
         })
       );
   };
   const { _id, home, away, text, startDate, field, recorder } = data;
+
   const columns = [
-    { title: "學系", dataIndex: "department" },
+    { title: "隊名", dataIndex: "name" },
+    {
+      title: "學系",
+      dataIndex: "department",
+      render: (value) => translateDepartment(value),
+    },
     { title: "報名狀態", dataIndex: "status" },
     { title: "預賽編號", dataIndex: "session_preGame" },
   ];
@@ -444,7 +452,7 @@ function AppointmentForm({
               placeholder={field !== null ? "尚未指派紀錄員" : "請先選擇時段"}
               onChange={onRecorderChanged}
               disabled={field === null}
-              value={recorder}
+              value={recorder ? recorder._id : null}
             >
               {recorders
                 .filter(
@@ -456,7 +464,9 @@ function AppointmentForm({
                 )
                 .map((user) => (
                   <Option value={user._id}>
-                    {`${user.account} (${user.department})`}
+                    {`${user.account} (${translateDepartment(
+                      user.department
+                    )})`}
                   </Option>
                 ))}
             </Select>

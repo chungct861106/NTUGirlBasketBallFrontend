@@ -69,6 +69,7 @@ export const CheckToken = async (storageToken) => {
     return err.response.data;
   }
 };
+
 export const GenerateImageURL = async (image) => {
   try {
     const data = new FormData();
