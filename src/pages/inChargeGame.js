@@ -41,8 +41,20 @@ const InChargeGame = () => {
                 >
                   球員名單確認
                 </Link>
-                <Link to={"/recordTeam/" + JSON.stringify(aMatch)}>紀錄台</Link>
-                <Link to={"/recordPlayer/" + JSON.stringify(aMatch)}>
+                <Link
+                  to={
+                    "/recordTeam/" +
+                    JSON.stringify({ aMatch, teamType: "home" })
+                  }
+                >
+                  紀錄台
+                </Link>
+                <Link
+                  to={
+                    "/recordPlayer/" +
+                    JSON.stringify({ aMatch, teamType: "away" })
+                  }
+                >
                   A隊球員紀錄表
                 </Link>
                 <Link to={"/"}>B隊球員紀錄表</Link>

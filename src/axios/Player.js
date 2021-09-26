@@ -45,7 +45,7 @@ export const GetPlayerObject = (serverURL) => {
           params: { team_id },
           headers: { Authorization: token },
         });
-        return response.data;
+        return response.data.data;
       } catch (err) {
         return err.response.data;
       }
