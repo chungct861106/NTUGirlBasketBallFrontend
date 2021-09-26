@@ -76,65 +76,74 @@ export const useInterGame = () => {
       //    - make dictionary, every team map to win count
       //    - dictionary to array, sort
 
-      for (let i = 0; i < 3; i++) {
-        let alphaChar = String.fromCharCode(65 + i);
-        let matchData;
-        try {
-          matchData = await getMatchBySession(alphaChar);
-        } catch (err) {
-          console.log("in useInterGame, matchData, fail", err);
-        }
-        if (matchData === null) {
-          break;
-        }
-        // find the advanced team
-        let winnerDict;
-        try {
-          winnerDict = await generateWinnerDict(matchData);
-        } catch (err) {
-          console.log("generateWinnerDict fail");
-        }
+      let interGameData = await Team.GetTeam({});
+      interGameData = interGameData.filter(
+        (team) => team.session_interGame !== -1
+      );
 
-        // object to array & sort
-        const sortDict = Object.entries(winnerDict).sort(function (a, b) {
-          return a[1].winCount < b[1].winCount ? 1 : -1;
-        });
+      console.log("initial filter:", interGameData);
 
-        // select 1 in 3, 2 in 4
-        // 1 1 1 =>看比分
-        // 2 1 0 =>
+      if (interGameData.length === 0) {
+        // get advanced team
+        for (let i = 0; i < 3; i++) {
+          let alphaChar = String.fromCharCode(65 + i);
+          let matchData;
+          try {
+            matchData = await getMatchBySession(alphaChar);
+          } catch (err) {
+            console.log("in useInterGame, matchData, fail", err);
+          }
+          if (matchData === null) {
+            break;
+          }
+          // find the advanced team
+          let winnerDict;
+          try {
+            winnerDict = await generateWinnerDict(matchData);
+          } catch (err) {
+            console.log("generateWinnerDict fail");
+          }
 
-        // 3 2 1 0 =>
-        // 2 2 2 0 =>看比分
-        // 3 1 1 1 => 看比分
-        // 3 3 0 0 =>
-        let sortByScore = Object.entries(sortDict).sort(function (a, b) {
-          if (a[1][1].winCount < b[1][1].winCount) return 1;
-          if (a[1][1].winCount > b[1][1].winCount) return -1;
-          if (a[1][1].score < b[1][1].score) return 1;
-          if (a[1][1].score > b[1][1].score) return -1;
-          return 0;
-        });
+          // object to array & sort
+          const sortDict = Object.entries(winnerDict).sort(function (a, b) {
+            return a[1].winCount < b[1].winCount ? 1 : -1;
+          });
 
-        console.log("sortByScore: ", sortByScore);
+          // select 1 in 3, 2 in 4
+          // 1 1 1 =>看比分
+          // 2 1 0 =>
 
-        await Team.Assign([
-          {
-            team_id: sortByScore[0][1][1].team_id,
-            session_interGame: 0,
-          },
-        ]);
-        if (sortDict.length === 4) {
+          // 3 2 1 0 =>
+          // 2 2 2 0 =>看比分
+          // 3 1 1 1 => 看比分
+          // 3 3 0 0 =>
+          let sortByScore = Object.entries(sortDict).sort(function (a, b) {
+            if (a[1][1].winCount < b[1][1].winCount) return 1;
+            if (a[1][1].winCount > b[1][1].winCount) return -1;
+            if (a[1][1].score < b[1][1].score) return 1;
+            if (a[1][1].score > b[1][1].score) return -1;
+            return 0;
+          });
+
+          console.log("sortByScore: ", sortByScore);
+
           await Team.Assign([
             {
-              team_id: sortByScore[1][1][1].team_id,
+              team_id: sortByScore[0][1][1].team_id,
               session_interGame: 0,
             },
           ]);
+          if (sortDict.length === 4) {
+            await Team.Assign([
+              {
+                team_id: sortByScore[1][1][1].team_id,
+                session_interGame: 0,
+              },
+            ]);
+          }
         }
+        interGameData = await Team.GetTeam({ session_interGame: 0 });
       }
-
-      const interGameData = await Team.GetTeam({ session_interGame: 0 });
 
       let newData = [];
       Object.entries(interGameData).forEach((data) => {
@@ -147,13 +156,11 @@ export const useInterGame = () => {
       });
       setInterGameTable(newData);
       setInterTeamNum(newData.length);
-      try {
-        const stage = "interGame";
-        const ifStage = await Match.CheckIfStage(stage);
-        setEditable(() => (ifStage ? false : true));
-      } catch (err) {
-        console.log("in preGame, checkIfStage false");
-      }
+
+      const notFillSession = newData.reduce((acc, cur) => {
+        return acc || cur.session_interGame === "--";
+      }, false);
+      setEditable(() => notFillSession);
     })();
   }, []);
 
