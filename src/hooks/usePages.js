@@ -37,13 +37,7 @@ const zhPage = {
   Checkteam: ["確認隊伍資訊", Checkteam],
 };
 const idPage = {
-  public: [
-    "main",
-    "scheduleRead",
-    "gameResult",
-    // "adminInfo",
-    "contact",
-  ],
+  public: ["main", "scheduleRead", "gameResult", "contact"],
   administer: [
     "main",
     "preGame",

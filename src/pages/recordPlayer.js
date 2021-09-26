@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { Button, Table, Radio, Input } from "antd";
+import { RecordPlayerAPI, Player } from "../axios";
 import "antd/dist/antd.css";
 
 const ContentBackground = styled.div`
@@ -13,6 +14,22 @@ const ContentBody = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+`;
+
+const ButtonDiv = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+  margin: 10px 0;
+`;
+
+const StyledButton = styled(Button)`
+  height: 33px;
+  width: 100px;
+  background-color: #6b9abb;
+  border-radius: 10px;
+  display: flex;
+  margin: 10px;
 `;
 
 const RadioGroup = styled(Radio.Group)`
@@ -41,60 +58,87 @@ Object.keys(buttonDict).map((type) => {
   columns.push({ title: buttonDict[type], dataIndex: type, key: type });
 });
 
-const RecordPlayer = () => {
+const RecordPlayer = (props) => {
   // should pass as props
-  const aMatch = {
-    match_id: 100,
-    home: 5,
-    away: 6,
-    recorder: "紀錄員1",
-  };
-  const teamId = 5;
 
-  const saveKey = `${aMatch.match_id}-${teamId}`;
+  const aMatch = JSON.parse(props.match.params.data).aMatch;
+  const teamType = JSON.parse(props.match.params.data).teamType;
+  const teamId = aMatch[teamType]._id;
+
+  const saveKey = `${aMatch._id}-${teamId}`;
   const [players, setPlayers] = useState();
   const [selectType, setSelectType] = useState("steal");
   const InputRef = useRef();
-  const [number2column, setNumber2Column] = useState();
+  const [numberTocolumn, setNumberToColumn] = useState();
 
-  useEffect(() => {
+  useEffect(async () => {
     let updatePlayers = JSON.parse(localStorage.getItem(`${saveKey}-players`));
-    let updateNumber2Column = JSON.parse(
-      localStorage.getItem(`${saveKey}-number2Column`)
+    let updateNumberToColumn = JSON.parse(
+      localStorage.getItem(`${saveKey}-numberToColumn`)
     );
-    if (!updatePlayers || !updateNumber2Column) {
+    if (!updatePlayers || !updateNumberToColumn) {
       // get players from db
-      const playersList = [1, 2, 3, 4, 5];
+      const playersList = await Player.GetAllPlayerByTeamID(teamId);
       updatePlayers = [];
-      updateNumber2Column = {};
-      playersList.map((num, index) => {
+      updateNumberToColumn = {};
+      playersList.map((player, index) => {
+        console.log(player);
         // for players
         let newBtnDict = {};
         Object.keys(buttonDict).map((type) => {
           newBtnDict[type] = 0;
         });
-        newBtnDict["num"] = num;
+        newBtnDict["num"] = player.number;
         updatePlayers.push(newBtnDict);
-        // for map
-        updateNumber2Column[num] = index;
+        // // for map
+        updateNumberToColumn[player.number] = {
+          index: index,
+          player_id: player._id,
+        };
       });
     }
     setPlayers(() => updatePlayers);
-    setNumber2Column(() => updateNumber2Column);
+    setNumberToColumn(() => updateNumberToColumn);
     localStorage.setItem(`${saveKey}-players`, JSON.stringify(updatePlayers));
     localStorage.setItem(
-      `${saveKey}-number2Column`,
-      JSON.stringify(updateNumber2Column)
+      `${saveKey}-numberToColumn`,
+      JSON.stringify(updateNumberToColumn)
     );
   }, []);
 
-  // const handleTypeChange = (e) => {
-  //   setSelectType(() => e.target.value);
-  // };
+  const handleSave = async (e) => {
+    const Key = `${aMatch._id}-${teamId}`;
+    const playersData = JSON.parse(localStorage.getItem(`${Key}-players`));
+    const numberToColumnDict = JSON.parse(
+      localStorage.getItem(`${Key}-numberToColumn`)
+    );
+
+    await Promise.all(
+      Object.entries(numberToColumnDict).map(async (player) => {
+        const index = player[1].index;
+        const data = {
+          match_id: aMatch._id,
+          team_id: teamId,
+          player_id: player[1].player_id,
+          steal: playersData[index].steal,
+          assist: playersData[index].assist,
+          block: playersData[index].block,
+          plus2: playersData[index]["2point"],
+          plus3: playersData[index]["3point"],
+          bankShot: playersData[index].bankShot,
+        };
+        try {
+          const res = await RecordPlayerAPI.Create(data);
+        } catch (err) {
+          console.log("in recordPlayer, SaveData fail");
+        }
+      })
+    );
+  };
 
   const handleClick = () => {
     const number = InputRef.current.state.value;
-    const index = number2column[number];
+    const index = numberTocolumn[number].index;
     const type = selectType;
     const updatePlayers = [...players];
     console.log("into handle click", number, index, type);
@@ -113,6 +157,10 @@ const RecordPlayer = () => {
   return (
     <ContentBackground>
       <ContentBody>
+        <ButtonDiv>
+          <StyledButton>重置</StyledButton>
+          <StyledButton onClick={() => handleSave()}>比賽結束</StyledButton>
+        </ButtonDiv>
         <Table
           columns={columns}
           dataSource={players}
