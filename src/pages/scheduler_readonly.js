@@ -178,16 +178,10 @@ function AppointmentForm({
     0: "https://i.imgur.com/uR9JIRI.png",
     1: "https://i.imgur.com/C378EBB.png",
   };
-  const onRecorderChanged = (value) => {
-    setAppointments((data) =>
-      data.map((match) => {
-        if (match._id === _id) match.recorder = value;
-        return match;
-      })
-    );
-  };
-  const { _id, home, away, text, startDate, field, recorder } = data;
+
+  const { home, away, text, startDate, field, recorder } = data;
   const columns = [
+    { title: "隊名", dataIndex: "name" },
     {
       title: "學系",
       dataIndex: "department",
@@ -196,7 +190,6 @@ function AppointmentForm({
     { title: "狀態", dataIndex: "status" },
     { title: "預賽編號", dataIndex: "session_preGame" },
   ];
-  const ThisRecorder = recorders.find(({ _id }) => _id === recorder);
   return (
     <Modal
       visible={visable}
@@ -225,10 +218,8 @@ function AppointmentForm({
         <Table columns={columns} dataSource={[home, away]} pagination={false} />
         <Form>
           <Form.Item label="紀錄員">
-            {ThisRecorder ? (
-              <a href={`/profile/${ThisRecorder._id}`}>
-                {ThisRecorder.account}
-              </a>
+            {recorder ? (
+              <a href={`/profile/${recorder._id}`}>{recorder.account}</a>
             ) : (
               "尚未指派"
             )}

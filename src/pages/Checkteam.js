@@ -68,6 +68,10 @@ export default function CheckTeams() {
     { value: "未繳費", text: "未繳費" },
     { value: "已繳費", text: "已繳費" },
   ];
+  const interGameOption = [
+    { value: -1, text: "未晉級" },
+    { value: 0, text: "晉級" },
+  ];
   const AdministerColumns = [
     {
       title: "隊名",
@@ -97,7 +101,10 @@ export default function CheckTeams() {
             defaultValue={teamInfo.status}
             onChange={async (value) => {
               const { _id } = teamInfo;
-              const response = await Team.Status(_id, value);
+              const response = await Team.Status({
+                team_id: _id,
+                status: value,
+              });
               if (response.code === 200) message.success("Success");
             }}
           >
@@ -105,6 +112,30 @@ export default function CheckTeams() {
               <Option value={value}>{text}</Option>
             ))}
           </Select>
+        );
+      },
+    },
+    {
+      title: "晉級編號",
+      render: (teamInfo) => {
+        return teamInfo.session_interGame <= 0 ? (
+          <Select
+            defaultValue={teamInfo.session_interGame}
+            onChange={async (value) => {
+              const { _id } = teamInfo;
+              const response = await Team.Status({
+                team_id: _id,
+                session_interGame: value,
+              });
+              if (response.code === 200) message.success("Success");
+            }}
+          >
+            {interGameOption.map(({ text, value }) => (
+              <Option value={value}>{text}</Option>
+            ))}
+          </Select>
+        ) : (
+          teamInfo.session_interGame
         );
       },
     },

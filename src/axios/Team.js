@@ -15,12 +15,12 @@ export const GetTeamObject = (serverURL) => {
         return err.response.message;
       }
     },
-    Status: async (team_id, status) => {
+    Status: async ({ team_id, status, session_interGame }) => {
       try {
         let response = await axios({
           method: "POST",
           url: serverURL + "teams/status",
-          data: { team_id, status },
+          data: { team_id, status, session_interGame },
           headers: { Authorization: token },
         });
         return response.data;
