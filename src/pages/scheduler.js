@@ -212,7 +212,7 @@ export default function MyScheduler() {
   useEffect(async () => {
     if (!user_id) return;
     console.log("GetData", user_id);
-    let response = await Match.GetALLMatch("scheduler");
+    let response = await Match.GetALLMatch();
     if (response.code === 200) {
       setMatches(
         response.data

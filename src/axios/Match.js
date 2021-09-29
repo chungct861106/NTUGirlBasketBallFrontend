@@ -3,8 +3,7 @@ import { token } from "../axios";
 
 export const GetMatchObject = (serverURL) => {
   return {
-    GetALLMatch: async (from) => {
-      console.log(from);
+    GetALLMatch: async () => {
       try {
         let response = await axios({
           method: "GET",
