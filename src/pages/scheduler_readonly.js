@@ -71,7 +71,8 @@ export default function MyScheduler() {
     );
   };
   useEffect(async () => {
-    let response = await Match.GetALLMatch();
+    if (!user_id) return;
+    let response = await Match.GetALLMatch("readonly");
     if (response.code === 200) {
       setArranged(
         response.data

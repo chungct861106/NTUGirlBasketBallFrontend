@@ -211,8 +211,8 @@ export default function MyScheduler() {
   };
   useEffect(async () => {
     if (!user_id) return;
-    console.log("GetData");
-    let response = await Match.GetALLMatch();
+    console.log("GetData", user_id);
+    let response = await Match.GetALLMatch("scheduler");
     if (response.code === 200) {
       setMatches(
         response.data
@@ -221,7 +221,7 @@ export default function MyScheduler() {
           )
           .map((match) => {
             match.text = `${match.home.name} vs ${match.away.name}`;
-            match.startDate = new Date(match.startDate);
+
             return match;
           })
       );
@@ -322,6 +322,7 @@ export default function MyScheduler() {
             data="dropArea"
             group={draggingGroupName}
             onDragStart={onListDragStart}
+            height={100}
           >
             {matches.map((task, index) => {
               task.key = index;
